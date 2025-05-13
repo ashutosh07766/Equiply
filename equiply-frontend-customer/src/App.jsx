@@ -10,6 +10,7 @@ import Profile from "./Profile";
 import PutRent from "./PutRent";
 import Wishlist from "./Wishlist";
 import OrderVeiw from "./OrderVeiw";
+import Login from "./login";
 
 function App() { 
 
@@ -27,6 +28,7 @@ function App() {
         <Route path="/PutRent" element={<PutRent/>}/>
         <Route path="/Wishlist" element={<Wishlist/>}/>
         <Route path="/OrderVeiw" element={<OrderVeiw/>}/>
+        <Route path="/login" element={<Login/>}/>
       </Routes>
     </BrowserRouter>
   )
