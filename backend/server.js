@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const userRouter = require('./routes/user.route.js');
 
+const productRouter = require('./routes/allproducts.route.js');
 
 const connectDB=require('./db/models/connection.js');
 connectDB();
@@ -12,14 +13,14 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/user', userRouter);
-
+app.use('/product', productRouter);
 app.use((req, res) => {
     res.status(404).json({ success: false, message: "Page not found" });
 });
 
-app.listen(3000, (err) => {
+app.listen(2000, (err) => {
     if (err) {
         console.log(err);
     }
-    console.log(' Server is running on port 3000');
+    console.log(' Server is running on port 2000');
 });
