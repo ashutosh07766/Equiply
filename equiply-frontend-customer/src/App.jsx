@@ -12,6 +12,7 @@ import Wishlist from "./Wishlist";
 import OrderVeiw from "./OrderVeiw";
 import Login from "./login";
 import Header from "./header";
+import Footer from "./Footer";
 
 function App() { 
 
@@ -31,6 +32,7 @@ function App() {
         <Route path="/OrderVeiw" element={<OrderVeiw/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/header" element={<Header/>}/>
+        <Route path="/footer" element={<Footer/>}/>
       </Routes>
     </BrowserRouter>
   )
