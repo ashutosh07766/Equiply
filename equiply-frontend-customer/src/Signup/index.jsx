@@ -21,14 +21,14 @@ const Signup = () => {
   };
 
   return (
-    <div style={{ marginTop: '100px' }}>
-      <h1 style={{textAlign:'center', fontSize:'32'}}>Create an account</h1>
-      <p style={{textAlign:'center', fontSize:'16'}}>Already have a account? <Link to="/login">Login</Link></p>
+    <div className="min-h-screen bg-gray-50 pt-16 px-4">
+      <h1 className="text-center text-4xl font-bold mb-2">Create an account</h1>
+      <p className="text-center text-lg mb-8">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link></p>
       
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="flex items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-md bg-white p-6 space-y-6"
+          className="w-full max-w-2xl p-6 space-y-6"
         >
           <div>
             <label className="block mb-1 text-sm text-gray-600">
@@ -40,7 +40,7 @@ const Signup = () => {
               placeholder="Enter your profile name"
               value={formData.profileName}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-4 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             />
           </div>
@@ -55,7 +55,7 @@ const Signup = () => {
               placeholder="Enter your email address"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-4 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             />
           </div>
@@ -71,7 +71,7 @@ const Signup = () => {
                 placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm pr-16 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm pr-16 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
               />
               <button
@@ -111,7 +111,7 @@ const Signup = () => {
 
           <button
             type="button"
-            className="flex items-center justify-center w-full border border-gray-300 py-3 rounded-full hover:bg-gray-100 transition"
+            className="flex items-center justify-center w-1/4 mx-auto border border-gray-300 py-3 rounded-full hover:bg-gray-100 transition"
           >
             <FcGoogle className="text-xl mr-2" /> Google
           </button>
