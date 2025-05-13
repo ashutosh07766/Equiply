@@ -21,8 +21,8 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16 px-4">
-      <h1 className="text-center text-4xl font-bold mb-2">Create an account</h1>
+    <div className="min-h-screen bg-gray-50 pt-16 px-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <h1 className="text-center text-4xl  mb-1">Create an account</h1>
       <p className="text-center text-lg mb-8">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link></p>
       
       <div className="flex items-center justify-center px-4">
