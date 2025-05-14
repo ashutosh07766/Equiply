@@ -22,20 +22,3 @@ const productSchema = new mongoose.Schema({
 const Product = mongoose.model('Product', productSchema);
 module.exports = Product;
 
-const seedProducts = async () => {
-    try {
-        await connectDB(); 
-        await Product.deleteMany();
-        console.log('Old products removed.');
-
-        await Product.insertMany(products);
-        console.log('Products added to the database.');
-    } catch (error) {
-        console.error('Error seeding products:', error);
-    }
-    finally {
-        await mongoose.disconnect()
-    }
-};
-
-seedProducts();
