@@ -14,13 +14,22 @@ let getAllProducts=async (req,res)=>{
         return res.status(404).json({success:false,message:"No products found"})
     }
     return res.status(200).json({success:true,products:products})
+}
 
+let product=async (req,res)=>{
+    let id=req.params.id
+    let product=await productModel.findById(id)
+    if(!product)
+    {
+        return res.status(404).json({success:false,message:"No products found"})
+    }
+    return res.status(200).json({success:true,product:product})
 }
 
 
 
-
 module.exports={
-getAllProducts
+getAllProducts,
+product
 
 } 
