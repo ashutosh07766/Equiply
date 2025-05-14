@@ -33,6 +33,7 @@ function App() {
         <Route path="/login" element={<Login/>}/>
         <Route path="/header" element={<Header/>}/>
         <Route path="/footer" element={<Footer/>}/>
+        <Route path="/productveiw/:id" element={<ProductVeiw />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Header from '../header';
 import Footer from '../Footer';
+import { Link } from 'react-router-dom';
 
 const Product = () => {
   const [products, setProducts] = useState([]);
@@ -104,9 +105,10 @@ const Product = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {getProductsArray().map((product) => (
-                <div
-                  key={product.id || Math.random().toString()}
-                  className="border rounded-lg p-4 flex flex-col items-center text-center"
+                <Link 
+                  to={`/productveiw/${product.id || product._id}`} 
+                  key={product.id || product._id || Math.random().toString()}
+                  className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow"
                 >
                   <img
                     src={product.images || "https://via.placeholder.com/150"}
@@ -115,10 +117,16 @@ const Product = () => {
                   />
                   <h3 className="text-sm font-medium mb-2">{product.name}</h3>
                   <p className="text-lg font-bold mb-2">${product.price}</p>
-                  <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
+                  <button 
+                    className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800"
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevent the Link from triggering
+                      // Add your buy now logic here
+                    }}
+                  >
                     Buy Now
                   </button>
-                </div>
+                </Link>
               ))}
             </div>
           )}
