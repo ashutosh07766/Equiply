@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Header from '../header';
 import Footer from '../Footer';
 import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
 const Product = () => {
   const [products, setProducts] = useState([]);
@@ -108,8 +109,16 @@ const Product = () => {
                 <Link 
                   to={`/productveiw/${product.id || product._id}`} 
                   key={product.id || product._id || Math.random().toString()}
-                  className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow"
+                  className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative"
                 >
+                  <button 
+                    className="absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100"
+                    onClick={(e) => {
+                      e.preventDefault();
+                    }}
+                  >
+                    <Heart size={18} color="#000" fill="none" />
+                  </button>
                   <img
                     src={product.images || "https://via.placeholder.com/150"}
                     alt={product.name}
@@ -120,8 +129,7 @@ const Product = () => {
                   <button 
                     className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800"
                     onClick={(e) => {
-                      e.preventDefault(); // Prevent the Link from triggering
-                      // Add your buy now logic here
+                      e.preventDefault();
                     }}
                   >
                     Buy Now
