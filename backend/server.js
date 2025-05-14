@@ -18,9 +18,9 @@ app.use((req, res) => {
     res.status(404).json({ success: false, message: "Page not found" });
 });
 
-app.listen(2000, (err) => {
+app.listen(3000, (err) => {
     if (err) {
         console.log(err);
     }
-    console.log(' Server is running on port 2000');
+    console.log(' Server is running on port 3000');
 });
