@@ -109,7 +109,7 @@ const Product = () => {
                   className="border rounded-lg p-4 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.image || "https://via.placeholder.com/150"}
+                    src={product.images || "https://via.placeholder.com/150"}
                     alt={product.name}
                     className="w-28 h-28 object-contain mb-4"
                   />

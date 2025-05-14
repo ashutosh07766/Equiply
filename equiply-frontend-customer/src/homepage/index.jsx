@@ -1,17 +1,102 @@
-import React from 'react'
-import Header from '../header'
-import Footer from '../Footer'
+import React, { useState, useEffect } from "react";
+import Header from "../header";
+import Footer from "../Footer";
+import { Link } from "react-router-dom";
 
 const Homepage = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/product");
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const data = await response.json();
+        setProducts(data.products.slice(0, 4)); // Fetch only the first 4 products
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div>
-        <Header />
+      <Header />
+      <div>
         <div>
-            <h1>Homepage</h1>
+          <div className="m-[12px] w-[1511px] h-52 bg-slate-800 rounded-2xl">
+            <div className="w-72 h-16 justify-start text-white text-3xl font-normal font-['Inter'] leading-loose">
+              Why Buy?
+            </div>
+            <div className="w-[489px] h-20 justify-start text-white text-5xl font-normal font-['Inter'] leading-loose">
+              When you can rent one.
+            </div>
+          </div>
         </div>
-        <Footer/>
-    </div>
-  )
-}
 
-export default Homepage
+        <div>
+          <div className="m-[31px] text-center justify-center text-neutral-700 text-4xl font-bold font-['Oxygen']">
+            Featured Products
+          </div>
+        </div>
+
+        <div>
+          {loading ? (
+            <div className="text-center">Loading products...</div>
+          ) : error ? (
+            <div className="text-center text-red-500">Error: {error}</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 p-6">
+              {products.map((product) => (
+                <div
+                  key={product.id || Math.random().toString()}
+                  className="border rounded-lg p-4 flex flex-col items-center text-center"
+                >
+                  <img
+                    src={product.images || "https://via.placeholder.com/150"}
+                    alt={product.name}
+                    className="w-28 h-28 object-contain mb-4"
+                  />
+                  <h3 className="text-sm font-medium mb-2">{product.name}</h3>
+                  <p className="text-lg font-bold mb-2">${product.price}</p>
+                  <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
+                    Buy Now
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex w-full justify-between items-center">
+  <div className="text-center text-neutral-700 text-4xl font-bold font-['Oxygen']">
+    Most Popular Products
+  </div>
+  <Link to="/product">
+  <div className="px-6 py-4 bg-zinc-800 rounded-[64px] inline-flex justify-end items-center gap-2.5 overflow-hidden cursor-pointer">
+    <div className="text-center text-white text-xl font-semibold font-['Exo']">
+      View All
+    </div>
+    <div className="w-6 h-6 relative overflow-hidden">
+      <div className="w-0 h-6 left-[-0.11px] top-0 absolute origin-top-left -rotate-90 overflow-hidden">
+        <div className="w-2 h-4 left-[7.50px] top-[4.12px] absolute bg-white"></div>
+      </div>
+    </div>
+  </div>
+</Link>
+</div>
+
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default Homepage;
