@@ -1,23 +1,69 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { FcGoogle } from "react-icons/fc"
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     profileName: "",
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isFormValid, setIsFormValid] = useState(false);
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  useEffect(() => {
+    // Check if form is valid whenever formData changes
+    const { profileName, email, password, phone } = formData;
+    const isValid = 
+      profileName.trim() !== "" && 
+      email.trim() !== "" && 
+      password.length >= 8;
+    
+    setIsFormValid(isValid);
+  }, [formData]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Submitted", formData);
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('http://localhost:3000/user/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.profileName,
+          email: formData.email,
+          password: formData.password,
+          phone: parseInt(formData.phone, 10)
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to sign up');
+      }
+      
+      console.log("Signup successful:", data);
+      navigate('/');
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError(err.message || 'An error occurred during signup');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -30,6 +76,12 @@ const Signup = () => {
           onSubmit={handleSubmit}
           className="w-full max-w-2xl p-6 space-y-6"
         >
+          {error && (
+            <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block mb-1 text-sm text-gray-600">
               What should we call you?
@@ -101,10 +153,14 @@ const Signup = () => {
 
           <button
             type="submit"
-            disabled
-            className="w-full py-3 bg-gray-200 text-gray-500 font-medium text-sm rounded-full cursor-not-allowed"
+            disabled={!isFormValid || isLoading}
+            className={`w-full py-3 font-medium text-sm rounded-full ${
+              isFormValid && !isLoading
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
           >
-            Create an account
+            {isLoading ? "Creating account..." : "Create an account"}
           </button>
 
           <div className="text-center text-sm text-gray-500">OR Continue with</div>
