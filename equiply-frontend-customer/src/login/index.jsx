@@ -32,8 +32,16 @@ const Login = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
       }
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+        if (data.user) {
+          localStorage.setItem('userData', JSON.stringify(data.user));
+        }
+      }
+      
       console.log('Login successful:', data);
       navigate('/');
+      window.location.reload();
       
     } catch (error) {
       setErrorMsg(error.message || 'Something went wrong. Please try again.');
