@@ -55,9 +55,17 @@ const Signup = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Failed to sign up');
       }
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+        if (data.user) {
+          localStorage.setItem('userData', JSON.stringify(data.user));
+        }
+      }
       
       console.log("Signup successful:", data);
       navigate('/');
+      window.location.reload();
+      
     } catch (err) {
       console.error("Signup error:", err);
       setError(err.message || 'An error occurred during signup');

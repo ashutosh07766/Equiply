@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import Header from '../header';
 import Footer from '../Footer';
+import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
 const Product = () => {
   const [products, setProducts] = useState([]);
@@ -104,10 +106,19 @@ const Product = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {getProductsArray().map((product) => (
-                <div
-                  key={product.id || Math.random().toString()}
-                  className="border rounded-lg p-4 flex flex-col items-center text-center"
+                <Link 
+                  to={`/productveiw/${product.id || product._id}`} 
+                  key={product.id || product._id || Math.random().toString()}
+                  className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative"
                 >
+                  <button 
+                    className="absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100"
+                    onClick={(e) => {
+                      e.preventDefault();
+                    }}
+                  >
+                    <Heart size={18} color="#000" fill="none" />
+                  </button>
                   <img
                     src={product.images || "https://via.placeholder.com/150"}
                     alt={product.name}
@@ -115,10 +126,15 @@ const Product = () => {
                   />
                   <h3 className="text-sm font-medium mb-2">{product.name}</h3>
                   <p className="text-lg font-bold mb-2">${product.price}</p>
-                  <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
+                  <button 
+                    className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800"
+                    onClick={(e) => {
+                      e.preventDefault();
+                    }}
+                  >
                     Buy Now
                   </button>
-                </div>
+                </Link>
               ))}
             </div>
           )}
