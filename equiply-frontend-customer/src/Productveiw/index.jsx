@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Star, StarHalf, Heart } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../header';
 import Footer from '../Footer';
+
+// Helper function to format dates
+const formatDate = (dateString) => {
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(dateString).toLocaleDateString(undefined, options);
+};
 
 const Review = ({ name, date, comment, rating }) => (
   <div className="border-b py-4">
@@ -21,9 +27,22 @@ const Review = ({ name, date, comment, rating }) => (
 
 const ProductVeiw = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('authToken');
+    setIsLoggedIn(!!token);
+  }, []);
 
   useEffect(() => {
     const fetchProductById = async () => {
@@ -38,9 +57,19 @@ const ProductVeiw = () => {
         const data = await response.json();
         console.log('Product Details:', data);
         
-        // Extract the product from the nested structure
+        // Extract the product and reviews from the response
         if (data && data.success && data.product) {
           setProduct(data.product);
+          
+          // Set review statistics if available
+          if (data.reviewStats) {
+            setReviewStats(data.reviewStats);
+          }
+          
+          // Set recent reviews if available
+          if (data.recentReviews) {
+            setReviews(data.recentReviews);
+          }
         } else {
           throw new Error('Invalid product data format from API');
         }
@@ -53,10 +82,94 @@ const ProductVeiw = () => {
       }
     };
 
+    // Fetch all reviews for this product
+    const fetchAllReviews = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/review/product/${id}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch reviews');
+        }
+        
+        const data = await response.json();
+        if (data && data.success && data.reviews) {
+          setReviews(data.reviews);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      }
+    };
+
     if (id) {
       fetchProductById();
+      fetchAllReviews();
     }
   }, [id]);
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!isLoggedIn) {
+      // Redirect to login page if not logged in
+      navigate('/login');
+      return;
+    }
+    
+    if (!newReview.comment.trim()) {
+      setReviewError('Please enter a comment');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      setReviewError(null);
+      
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('http://localhost:3000/review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token
+        },
+        body: JSON.stringify({
+          productId: id,
+          rating: newReview.rating,
+          comment: newReview.comment
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit review');
+      }
+      
+      // Reset form and refresh reviews
+      setNewReview({ rating: 5, comment: '' });
+      
+      // Refetch reviews to include the new one
+      const updatedReviewsResponse = await fetch(`http://localhost:3000/review/product/${id}`);
+      const updatedReviewsData = await updatedReviewsResponse.json();
+      
+      if (updatedReviewsData && updatedReviewsData.success) {
+        setReviews(updatedReviewsData.reviews);
+      }
+      
+      // Refetch product to update review stats
+      const updatedProductResponse = await fetch(`http://localhost:3000/product/${id}`);
+      const updatedProductData = await updatedProductResponse.json();
+      
+      if (updatedProductData && updatedProductData.success && updatedProductData.reviewStats) {
+        setReviewStats(updatedProductData.reviewStats);
+      }
+      
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      setReviewError(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -167,49 +280,126 @@ const ProductVeiw = () => {
           <p className="text-gray-700">
             {product.description || 'No description available for this product.'}
           </p>
-          <button className="mt-4 text-blue-600 hover:underline">View More ⌄</button>
         </div>
 
         <div className="mt-12">
           <h2 className="text-xl font-bold mb-4">Reviews</h2>
+          
+          /* Review statistics */
           <div className="flex items-center gap-4 mb-4">
-            <div className="text-4xl font-bold">4.8</div>
-            <div className="text-yellow-500 flex gap-1">
-              {[...Array(4)].map((_, i) => (
-                <Star key={i} fill="currentColor" />
-              ))}
-              <StarHalf fill="currentColor" />
+            <div className="text-4xl font-bold">
+              {reviewStats ? reviewStats.averageRating : '0.0'}
             </div>
-            <div className="text-gray-600">411 ratings</div>
+            <div className="text-yellow-500 flex gap-1">
+              {[...Array(5)].map((_, i) => {
+                if (!reviewStats) return <Star key={i} />;
+                
+                const rating = reviewStats.averageRating;
+                if (i < Math.floor(rating)) {
+                  return <Star key={i} fill="currentColor" />;
+                } else if (i === Math.floor(rating) && rating % 1 >= 0.5) {
+                  return <StarHalf key={i} fill="currentColor" />;
+                } else {
+                  return <Star key={i} />;
+                }
+              })}
+            </div>
+            <div className="text-gray-600">
+              {reviewStats ? reviewStats.totalReviews : 0} ratings
+            </div>
           </div>
+          
+          /* Rating distribution */
           <div className="space-y-1 text-sm text-gray-700">
-            <div>Excellent — 100</div>
-            <div>Good — 11</div>
-            <div>Average — 3</div>
-            <div>Below Average — 2</div>
-            <div>Poor — 1</div>
+            {reviewStats && (
+              <>
+                <div>Excellent — {reviewStats.ratingDistribution['5']}</div>
+                <div>Good — {reviewStats.ratingDistribution['4']}</div>
+                <div>Average — {reviewStats.ratingDistribution['3']}</div>
+                <div>Below Average — {reviewStats.ratingDistribution['2']}</div>
+                <div>Poor — {reviewStats.ratingDistribution['1']}</div>
+              </>
+            )}
           </div>
+          
+          /* Review submission form */
+          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">Write a Review</h3>
+            {!isLoggedIn && (
+              <p className="text-gray-600 mb-2">
+                Please <a href="/login" className="text-blue-600 hover:underline">login</a> to submit a review
+              </p>
+            )}
+            <form onSubmit={handleSubmitReview}>
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className="text-yellow-500"
+                      onClick={() => setNewReview({ ...newReview, rating: star })}
+                      disabled={!isLoggedIn}
+                    >
+                      <Star 
+                        size={24} 
+                        fill={star <= newReview.rating ? 'currentColor' : 'none'} 
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Comment</label>
+                <textarea
+                  className="w-full p-2 border rounded-md"
+                  rows={4}
+                  value={newReview.comment}
+                  onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                  placeholder="Share your experience with this product"
+                  disabled={!isLoggedIn}
+                ></textarea>
+              </div>
+              {reviewError && (
+                <div className="text-red-500 text-sm mb-2">{reviewError}</div>
+              )}
+              <button
+                type="submit"
+                className={`px-4 py-2 rounded-lg ${
+                  isLoggedIn
+                    ? "bg-black text-white hover:opacity-90"
+                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                }`}
+                disabled={!isLoggedIn || isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit Review"}
+              </button>
+            </form>
+          </div>
+          
+          /* Display reviews */
           <div className="mt-6 space-y-6">
-            <Review
-              name="Oscar Carey"
-              date="21 January 2024"
-              rating={5}
-              comment="One of the best! I've long considered iPhones from America, but I couldn't be happier with this procurement. I have a SIM plan and also use this for my main phone. The camera system is crazy good. The battery lasts all day and I love the always-on screen and lock screen widgets. Plus the cinematic effect on videos is MIND-BLOWING!"
-            />
-            <Review
-              name="Reehal Kashers"
-              date="11 January 2024"
-              rating={5}
-              comment="This is one of the most capable Android rivals out there. iPhone 14 Pro Max is great! Apple is pushing out the curve forward. Just about the best camera setup in phones if you're serious about quality. The iPhone 14 performs at top-tier and gives smooth social media sync."
-            />
-            <Review
-              name="Darry Krug"
-              date="04 January 2024"
-              rating={3}
-              comment="Only 4 stars for me (my low tier) but the camera is a little funky. Hoping it will change with a software update, otherwise, love the phone!"
-            />
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <Review
+                  key={review._id}
+                  name={review.userName}
+                  date={formatDate(review.date)}
+                  rating={review.rating}
+                  comment={review.comment}
+                />
+              ))
+            ) : (
+              <p className="text-gray-500 italic">No reviews yet. Be the first to review this product!</p>
+            )}
           </div>
-          <button className="mt-6 text-blue-600 hover:underline">View More ⌄</button>
+          
+          {reviews.length > 3 && (
+            <button className="mt-6 text-blue-600 hover:underline">
+              View More ⌄
+            </button>
+          )}
         </div>
       </div>
       <Footer />
