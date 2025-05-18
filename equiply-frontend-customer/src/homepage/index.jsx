@@ -67,32 +67,33 @@ const Homepage = () => {
                   />
                   <h3 className="text-sm font-medium mb-2">{product.name}</h3>
                   <p className="text-lg font-bold mb-2">${product.price}</p>
-                  <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
-                    Buy Now
-                  </button>
+                  <Link to={`/productveiw/${product._id}`}>
+                    <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
+                      Buy Now
+                    </button>
+                  </Link>
                 </div>
               ))}
             </div>
           )}
         </div>
         <div className="flex w-full justify-between items-center">
-  <div className="text-center text-neutral-700 text-4xl font-bold font-['Oxygen']">
-    Most Popular Products
-  </div>
-  <Link to="/product">
-  <div className="px-6 py-4 bg-zinc-800 rounded-[64px] inline-flex justify-end items-center gap-2.5 overflow-hidden cursor-pointer">
-    <div className="text-center text-white text-xl font-semibold font-['Exo']">
-      View All
-    </div>
-    <div className="w-6 h-6 relative overflow-hidden">
-      <div className="w-0 h-6 left-[-0.11px] top-0 absolute origin-top-left -rotate-90 overflow-hidden">
-        <div className="w-2 h-4 left-[7.50px] top-[4.12px] absolute bg-white"></div>
-      </div>
-    </div>
-  </div>
-</Link>
-</div>
-
+          <div className="text-center text-neutral-700 text-4xl font-bold font-['Oxygen']">
+            Most Popular Products
+          </div>
+          <Link to="/product">
+            <div className="px-6 py-4 bg-zinc-800 rounded-[64px] inline-flex justify-end items-center gap-2.5 overflow-hidden cursor-pointer">
+              <div className="text-center text-white text-xl font-semibold font-['Exo']">
+                View All
+              </div>
+              <div className="w-6 h-6 relative overflow-hidden">
+                <div className="w-0 h-6 left-[-0.11px] top-0 absolute origin-top-left -rotate-90 overflow-hidden">
+                  <div className="w-2 h-4 left-[7.50px] top-[4.12px] absolute bg-white"></div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
       </div>
       <Footer />
     </div>
