@@ -170,6 +170,35 @@ const ProductVeiw = () => {
       setIsSubmitting(false);
     }
   };
+  const handleRentNow = () => {
+    if (!product || !product._id) {
+      console.error("Product data is missing ID");
+      return;
+    }
+    
+    // Store selected product info in localStorage for checkout
+    const rentalProduct = {
+      id: product._id,
+      name: product.name,
+      price: parseFloat(product.renting?.days || product.price),
+      image: product.images,
+      rentalDuration: 'days',
+      rentalPeriod: 3, // Default to 3 days rental
+      category: product.category
+    };
+    
+    console.log("Storing product for checkout:", rentalProduct);
+    
+    // Validate ID before storing
+    if (!rentalProduct.id) {
+      console.error("Invalid product ID");
+      return;
+    }
+    
+    // Store in localStorage to access in checkout
+    localStorage.setItem('selectedProducts', JSON.stringify([rentalProduct]));
+    navigate('/Checkout');
+  };
 
   if (loading) {
     return (
@@ -264,7 +293,10 @@ const ProductVeiw = () => {
               <button className="flex items-center gap-2 border px-4 py-2 rounded-lg hover:bg-gray-100">
                 <Heart size={18} /> to Wishlist
               </button>
-              <button className="bg-black text-white px-4 py-2 rounded-lg hover:opacity-90">
+              <button 
+                className="bg-black text-white px-4 py-2 rounded-lg hover:opacity-90"
+                onClick={handleRentNow}  
+              >
                 Rent Now
               </button>
             </div>

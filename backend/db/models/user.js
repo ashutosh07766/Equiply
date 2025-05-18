@@ -1,5 +1,24 @@
 const mongoose=require('mongoose')
 
+const addressSchema = new mongoose.Schema({
+    label: {
+        type: String,
+        required: true
+    },
+    type: {
+        type: String,
+        enum: ['Home', 'Office', 'Other'],
+        default: 'Home'
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    }
+}, { _id: true });
 
 let userSchema=new mongoose.Schema({
     
@@ -12,17 +31,18 @@ let userSchema=new mongoose.Schema({
         required:true,
 
     },
-
     password:{
         type:String,
         required:true,
     },
-   phone:{
+    phone:{
         type:Number,
-        
-     
     },
- 
+    addresses: [addressSchema],
+    defaultAddressId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'addresses'
+    },
     createdAt:{
         type:Date,
         default:Date.now
