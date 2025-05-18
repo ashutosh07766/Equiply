@@ -285,7 +285,6 @@ const ProductVeiw = () => {
         <div className="mt-12">
           <h2 className="text-xl font-bold mb-4">Reviews</h2>
           
-          /* Review statistics */
           <div className="flex items-center gap-4 mb-4">
             <div className="text-4xl font-bold">
               {reviewStats ? reviewStats.averageRating : '0.0'}
@@ -309,7 +308,6 @@ const ProductVeiw = () => {
             </div>
           </div>
           
-          /* Rating distribution */
           <div className="space-y-1 text-sm text-gray-700">
             {reviewStats && (
               <>
@@ -322,7 +320,6 @@ const ProductVeiw = () => {
             )}
           </div>
           
-          /* Review submission form */
           <div className="mt-8 p-4 bg-gray-50 rounded-lg">
             <h3 className="text-lg font-semibold mb-3">Write a Review</h3>
             {!isLoggedIn && (
@@ -378,7 +375,6 @@ const ProductVeiw = () => {
             </form>
           </div>
           
-          /* Display reviews */
           <div className="mt-6 space-y-6">
             {reviews.length > 0 ? (
               reviews.map((review) => (
