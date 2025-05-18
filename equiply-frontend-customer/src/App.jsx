@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Homepage from './homepage';
 import Product from './product';
-import Cheakout from './Cheakout';
+import Checkout from './Checkout';
 import ProductVeiw from './Productveiw';
 import Signup from './Signup';
 import History from "./History";
@@ -13,6 +13,7 @@ import OrderVeiw from "./OrderVeiw";
 import Login from "./login";
 import Header from "./header";
 import Footer from "./Footer";
+import OrderConfirmation from "./OrderConfirmation";
 
 function App() { 
 
@@ -21,7 +22,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Homepage/>}/>
         <Route path="/product" element={<Product/>}/>
-        <Route path="/Cheakout" element={<Cheakout/>}/>
+        <Route path="/Checkout" element={<Checkout/>}/>
         <Route path="/ProductVeiw" element={<ProductVeiw/>}/>
         <Route path="/Signup" element={<Signup/>}/>
         <Route path="/History" element={<History/>}/>
@@ -34,6 +35,7 @@ function App() {
         <Route path="/header" element={<Header/>}/>
         <Route path="/footer" element={<Footer/>}/>
         <Route path="/productveiw/:id" element={<ProductVeiw />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
       </Routes>
     </BrowserRouter>
   )
