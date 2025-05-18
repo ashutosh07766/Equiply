@@ -55,6 +55,25 @@ curl -X GET http://localhost:3000/product
 curl -X GET http://localhost:3000/product/[PRODUCT_ID]
 ```
 
+### 3. Create Product (requires authentication)
+
+```bash
+curl -X POST http://localhost:3000/product \
+  -H "Content-Type: application/json" \
+  -H "x-access-token: YOUR_JWT_TOKEN" \
+  -d '{
+    "name": "Product Name",
+    "description": "Product Description",
+    "price": 99.99,
+    "category": "Tools",
+    "location": "City, State",
+    "renting": {
+      "days": 99.99,
+      "weeks": 299.99
+    }
+  }'
+```
+
 ## Review Routes
 
 ### 1. Create a Review (requires authentication)

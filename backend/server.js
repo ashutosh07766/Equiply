@@ -7,6 +7,7 @@ const productRouter = require('./routes/allproducts.route.js');
 const reviewRouter = require('./routes/review.route.js');
 const checkoutRouter = require('./routes/checkout.route.js');
 const paymentRouter = require('./routes/payment.route.js');
+const uploadRouter = require('./routes/upload.route.js');
 
 const connectDB=require('./db/models/connection.js');
 connectDB();
@@ -19,6 +20,7 @@ app.use('/product', productRouter);
 app.use('/review', reviewRouter);
 app.use('/checkout', checkoutRouter);
 app.use('/payment', paymentRouter);
+app.use('/upload', uploadRouter);
 
 app.use((req, res) => {
     res.status(404).json({ success: false, message: "Page not found" });

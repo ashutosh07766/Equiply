@@ -65,9 +65,59 @@ let product=async (req,res)=>{
     }
 }
 
+const createProduct = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: "Validation error",
+                errors: errors.array()
+            });
+        }
 
+        const {
+            name,
+            description,
+            price,
+            category,
+            location,
+            availability,
+            renting
+        } = req.body;
+
+        const newProduct = new productModel({
+            name,
+            description,
+            price,
+            category,
+            images: req.body.images || "https://via.placeholder.com/500x300?text=No+Image+Available",
+            seller: req.userId,
+            location,
+            availability: availability || "Available",
+            renting: renting || {
+                days: price
+            }
+        });
+
+        await newProduct.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "Product created successfully",
+            product: newProduct
+        });
+    } catch (error) {
+        console.error('Error creating product:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while creating product"
+        });
+    }
+};
 
 module.exports={
-getAllProducts,
-product
+    getAllProducts,
+    product,
+    createProduct
 }

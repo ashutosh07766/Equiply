@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../header";
 
 const PutRent = () => {
@@ -19,7 +20,15 @@ const PutRent = () => {
   }]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadError, setUploadError] = useState(null);
+  const [productName, setProductName] = useState("");
+  const [productDescription, setProductDescription] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Tools"); // Add default categories as needed
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   const addPrice = () => {
     // Get all available periods for the new price entry
@@ -87,18 +96,45 @@ const PutRent = () => {
     setPrices(newPrices);
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const files = e.target.files;
     if (files.length > 0) {
       const validFiles = Array.from(files).filter(file => 
         file.type === "image/jpeg" || file.type === "image/png"
       );
-      // Append new files to existing ones instead of replacing
-      setSelectedFiles(prev => [...prev, ...validFiles]);
+      uploadFiles(validFiles);
     }
   };
 
-  const handleDrop = (e) => {
+  const uploadFiles = async (files) => {
+    try {
+      const uploadedUrls = [];
+      setUploadError(null);
+
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch('http://localhost:3000/upload/image', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          uploadedUrls.push(data.url);
+        }
+      }
+
+      setUploadedImages(prev => [...prev, ...uploadedUrls]);
+      setSelectedFiles(prev => [...prev, ...files]);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Error uploading files. Please try again.');
+    }
+  };
+
+  const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -107,8 +143,7 @@ const PutRent = () => {
       const validFiles = Array.from(e.dataTransfer.files).filter(file => 
         file.type === "image/jpeg" || file.type === "image/png"
       );
-      // Append new files to existing ones instead of replacing
-      setSelectedFiles(prev => [...prev, ...validFiles]);
+      uploadFiles(validFiles);
     }
   };
 
@@ -122,6 +157,73 @@ const PutRent = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      // Validate required fields
+      if (!productName || !productDescription || !selectedCategory) {
+        throw new Error("Please fill all required fields");
+      }
+
+      // Validate at least one price is saved
+      const savedPrices = prices.filter(p => p.isSaved);
+      if (savedPrices.length === 0) {
+        throw new Error("Please save at least one price");
+      }
+
+      // Format rental prices
+      const rentingPrices = {};
+      savedPrices.forEach(price => {
+        rentingPrices[price.period] = parseFloat(price.price);
+      });
+
+      // Format address
+      const location = `${addressLine1}${addressLine2 ? `, ${addressLine2}` : ''}, ${city}, ${state} ${pincode}`;
+
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const productData = {
+        name: productName,
+        description: productDescription,
+        price: savedPrices[0].price, // Use first price as base price
+        category: selectedCategory,
+        images: uploadedImages[0], // Use first uploaded image as main image
+        location,
+        renting: rentingPrices,
+        availability: "Available"
+      };
+
+      const response = await fetch('http://localhost:3000/product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token
+        },
+        body: JSON.stringify(productData)
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create product");
+      }
+
+      // Redirect to product view page
+      navigate(`/productveiw/${data.product._id}`);
+    } catch (error) {
+      console.error('Error creating product:', error);
+      setSubmitError(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -207,6 +309,8 @@ const PutRent = () => {
               <input
                 className="w-full mt-2 px-6 py-5 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400 font-['Poppins']"
                 placeholder="Enter product name"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
               />
             </label>
 
@@ -215,6 +319,8 @@ const PutRent = () => {
               <textarea
                 className="w-full mt-2 px-6 py-5 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400 font-['Poppins'] min-h-[120px] resize-none"
                 placeholder="Enter product description"
+                value={productDescription}
+                onChange={(e) => setProductDescription(e.target.value)}
               />
             </label>
 
@@ -351,15 +457,18 @@ const PutRent = () => {
                 ))}
             </div>
             
+            {submitError && (
+              <div className="text-red-500 text-sm mt-4">{submitError}</div>
+            )}
+            
             <div className="pt-8">
               <button 
                 className="w-full px-16 py-3 bg-black rounded-lg inline-flex justify-center items-center gap-2 hover:bg-gray-800"
-                onClick={() => {
-                  // Add your submit logic here
-                }}
+                onClick={handleSubmit}
+                disabled={isSubmitting}
               >
                 <div className="text-center text-white text-sm font-medium font-['Inter'] leading-normal">
-                  Upload Your Product
+                  {isSubmitting ? "Uploading..." : "Upload Your Product"}
                 </div>
               </button>
             </div>
