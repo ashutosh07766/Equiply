@@ -34,14 +34,18 @@ const Login = () => {
       }
       if (data.token) {
         localStorage.setItem('authToken', data.token);
+      
         if (data.user) {
+          console.log("userid",JSON.stringify(data.user))
           localStorage.setItem('userData', JSON.stringify(data.user));
         }
       }
       
-      console.log('Login successful:', data);
-      navigate('/');
-      window.location.reload();
+    
+      setTimeout(() => {
+        navigate('/');
+        window.location.reload();
+      }, 100);
       
     } catch (error) {
       setErrorMsg(error.message || 'Something went wrong. Please try again.');
