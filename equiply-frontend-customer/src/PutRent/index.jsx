@@ -210,7 +210,7 @@ const PutRent = () => {
         description: productDescription,
         price: savedPrices[0].price,
         category: selectedCategory,
-        images: uploadedImages[0],
+        images: uploadedImages, // Changed from uploadedImages[0] to send all images
         location,
         renting: rentingPrices,
         availability: `${availability.duration} ${availability.period}` // Format: "2 weeks", "3 months", etc.
@@ -246,75 +246,86 @@ const PutRent = () => {
       <Header />
       <div className="flex justify-center items-center min-h-[calc(100vh-80px)]">
         <div className="flex gap-[180px] mt-8">
-          <div 
-            className={`w-96 h-96 bg-gray-200 rounded shadow-[0px_24px_24px_0px_rgba(0,0,0,0.05)] border-2 border-dashed ${
-              dragActive ? 'border-[#0D2C85] bg-blue-50' : 'border-blue-800/30'
-            } relative cursor-pointer`}
-            onClick={() => fileInputRef.current.click()}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/jpeg,image/png"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            
-            {selectedFiles.length > 0 ? (
-              <div className="absolute inset-0 p-4 overflow-auto">
-                <div className="grid grid-cols-2 gap-2">
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-40 object-cover rounded"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedFiles(files => files.filter((_, i) => i !== index));
-                          }}
-                          className="text-white bg-red-500 p-1 rounded-full hover:bg-red-600"
-                        >
-                          ×
-                        </button>
+          <div className="space-y-4">
+            <div 
+              className={`w-96 h-96 bg-gray-200 rounded shadow-[0px_24px_24px_0px_rgba(0,0,0,0.05)] border-2 border-dashed ${
+                dragActive ? 'border-[#0D2C85] bg-blue-50' : 'border-blue-800/30'
+              } relative cursor-pointer`}
+              onClick={() => fileInputRef.current.click()}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              
+              {selectedFiles.length > 0 ? (
+                <div className="absolute inset-0 p-4 overflow-auto">
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-40 object-cover rounded"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedFiles(files => files.filter((_, i) => i !== index));
+                              setUploadedImages(images => images.filter((_, i) => i !== index));
+                            }}
+                            className="text-white bg-red-500 p-1 rounded-full hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        <span className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded">
+                          {index + 1}
+                        </span>
                       </div>
-                      <span className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded">
-                        {index + 1}
-                      </span>
-                    </div>
-                  ))}
-                  <div 
-                    className="w-full h-40 border-2 border-dashed border-gray-300 rounded flex items-center justify-center cursor-pointer hover:border-[#0D2C85] hover:bg-blue-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current.click();
-                    }}
-                  >
-                    <span className="text-gray-500">+ Add More</span>
+                    ))}
+                    {selectedFiles.length < 6 && (
+                      <div 
+                        className="w-full h-40 border-2 border-dashed border-gray-300 rounded flex items-center justify-center cursor-pointer hover:border-[#0D2C85] hover:bg-blue-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fileInputRef.current.click();
+                        }}
+                      >
+                        <span className="text-gray-500">+ Add More</span>
+                      </div>
+                    )}
+                  </div>
+                  {selectedFiles.length >= 6 && (
+                    <p className="text-sm text-gray-500 mt-2">Maximum 6 images allowed</p>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center">
+                  <div className="text-center">
+                    <span className="text-stone-950 text-base font-bold font-['Poppins'] leading-normal">
+                      Drag & drop files or
+                    </span>
+                    <span className="text-indigo-800 text-base font-bold font-['Poppins'] underline leading-normal ml-1">
+                      Browse
+                    </span>
+                  </div>
+                  <div className="text-center text-stone-500 text-xs mt-2">
+                    Supported formats: JPEG, PNG
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center">
-                <div className="text-center">
-                  <span className="text-stone-950 text-base font-bold font-['Poppins'] leading-normal">
-                    Drag & drop files or
-                  </span>
-                  <span className="text-indigo-800 text-base font-bold font-['Poppins'] underline leading-normal ml-1">
-                    Browse
-                  </span>
-                </div>
-                <div className="text-center text-stone-500 text-xs mt-2">
-                  Supported formats: JPEG, PNG
-                </div>
-              </div>
+              )}
+            </div>
+            {uploadError && (
+              <p className="text-red-500 text-sm">{uploadError}</p>
             )}
           </div>
 

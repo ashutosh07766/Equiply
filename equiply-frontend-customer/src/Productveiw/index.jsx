@@ -38,6 +38,7 @@ const ProductVeiw = () => {
   const [reviewError, setReviewError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedRental, setSelectedRental] = useState('days');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     // Check if user is logged in
@@ -205,6 +206,19 @@ const ProductVeiw = () => {
     navigate('/Checkout');
   };
 
+  // Add helper functions for image navigation
+  const nextImage = () => {
+    setCurrentImageIndex(prev => 
+      prev === (product?.images?.length || 1) - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex(prev => 
+      prev === 0 ? (product?.images?.length || 1) - 1 : prev - 1
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -246,13 +260,57 @@ const ProductVeiw = () => {
       <Header />
       <div className="max-w-5xl mx-auto px-4 py-8 flex-grow">
         <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <img
-              src={product.images || "https://via.placeholder.com/500x300?text=No+Image+Available"}
-              alt={product.name}
-              className="w-full rounded-xl shadow-md"
-            />
+          <div className="space-y-4">
+            {/* Main Image with Navigation */}
+            <div className="relative">
+              <img
+                src={Array.isArray(product.images) ? 
+                  product.images[currentImageIndex] : 
+                  product.images || "https://via.placeholder.com/500x300?text=No+Image+Available"
+                }
+                alt={`${product.name} - Image ${currentImageIndex + 1}`}
+                className="w-full h-[400px] object-contain rounded-xl shadow-md"
+              />
+              
+              {Array.isArray(product.images) && product.images.length > 1 && (
+                <>
+                  <button 
+                    onClick={prevImage}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full"
+                  >
+                    ←
+                  </button>
+                  <button 
+                    onClick={nextImage}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full"
+                  >
+                    →
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnail Strip */}
+            {Array.isArray(product.images) && product.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {product.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`flex-shrink-0 ${currentImageIndex === idx ? 'border-2 border-black' : 'border border-gray-200'}`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} thumbnail ${idx + 1}`}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Rest of product details */}
           <div>
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
             <div className="mb-4">
