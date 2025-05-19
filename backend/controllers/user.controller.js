@@ -33,15 +33,23 @@ else{
       }
       const tokenSecret=process.env.TOKEN_SECRET
     
-     jwt.sign(payload,tokenSecret,{
-          expiresIn:3600
-      },(err,token)=>{
-       if(err)
-       {
-return res.status(500).json({success:false,message:"Error"})
-       }
-       return res.status(200).json({success:true,token:token})
-      })
+      jwt.sign(payload, tokenSecret, { expiresIn: 3600 }, (err, token) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: "Error" });
+        }
+        return res.status(200).json({ 
+          success: true, 
+          token: token, 
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            type: user.type || 0
+          }
+        });
+      });
+      
 
 }
 

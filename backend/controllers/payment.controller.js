@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const Order = require('../db/models/order.js');
 const Payment = require('../db/models/payment.js');
+const Notification = require('../db/models/notification.js')
 const mongoose = require('mongoose');
 
 // Process a payment for an order
@@ -78,6 +79,12 @@ const processPayment = async (req, res) => {
             
             await payment.save();
             await order.save();
+
+            // Create a notification for the user
+            await Notification.create({
+                userId: order.userId,
+                message: `Your order with (${order._id}) has been placed successfully!`
+            });
             
             return res.status(200).json({
                 success: true,

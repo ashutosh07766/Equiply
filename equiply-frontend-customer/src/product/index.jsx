@@ -1,123 +1,89 @@
-import React, { useState, useEffect } from 'react'
-import Header from '../header';
-import Footer from '../Footer';
-import { Link } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import Header from "../header";
+import Footer from "../Footer";
+import { Link } from "react-router-dom";
+import { Heart } from "lucide-react";
 
 const Product = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const searchTerm = params.get("search") || "";
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true);
-        const response = await fetch('http://localhost:3000/product');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        
+        const response = await fetch("http://localhost:3000/product");
         const data = await response.json();
-        console.log('API Response:', data);
-        if (Array.isArray(data)) {
-          setProducts(data);
-        } else if (data && typeof data === 'object') {
-          if (Array.isArray(data.products)) {
-            setProducts(data.products);
-          } else if (Array.isArray(data.data)) {
-            setProducts(data.data);
-          } else if (Array.isArray(data.items)) {
-            setProducts(data.items);
-          } else {
-            const productsArray = Object.values(data).filter(item => item && typeof item === 'object');
-            if (productsArray.length > 0) {
-              setProducts(productsArray);
-            } else {
-              throw new Error('Unexpected data format from API');
-            }
-          }
-        } else {
-          throw new Error('Invalid response format from API');
-        }
-        
+        setProducts(Array.isArray(data) ? data : data.products || data.data || data.items || []);
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setError(error.message);
+      } catch (err) {
+        setError("Failed to load products");
         setLoading(false);
       }
     };
 
     fetchProducts();
   }, []);
-  const getProductsArray = () => {
-    if (!Array.isArray(products)) {
-      console.error('Products is not an array:', products);
-      return [];
-    }
-    return products;
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+    );
   };
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategories.length === 0 || selectedCategories.includes(product.category);
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      
+
       <div className="flex flex-col lg:flex-row p-6 gap-6 flex-grow">
         <aside className="w-full lg:w-1/5 space-y-4">
-          <h2 className="font-semibold text-lg">Filter</h2>
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full border rounded px-3 py-2 text-sm"
-          />
-          <div className="space-y-2 text-sm">
-            <div className="font-medium">Mobile</div>
-            <label className="block">
-              <input type="checkbox" className="mr-2" /> Mobile
+          <h2 className="font-semibold text-lg">Filter by Category</h2>
+          {["Mobile", "Electronics", "House Appliances", "Accessories"].map((cat) => (
+            <label key={cat} className="block text-sm">
+              <input
+                type="checkbox"
+                className="mr-2"
+                checked={selectedCategories.includes(cat)}
+                onChange={() => handleCategoryChange(cat)}
+              />
+              {cat}
             </label>
-            <label className="block">
-              <input type="checkbox" className="mr-2" /> Electronics
-            </label>
-            <label className="block">
-              <input type="checkbox" className="mr-2" /> House Appliances
-            </label>
-            <label className="block">
-              <input type="checkbox" className="mr-2" /> Accessories
-            </label>
-          </div>
+          ))}
         </aside>
 
         <main className="flex-1">
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-lg font-medium">Loading products...</p>
-            </div>
+            <div className="text-center py-20 text-lg font-medium">Loading products...</div>
           ) : error ? (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-lg font-medium text-red-500">Error: {error}</p>
-            </div>
-          ) : getProductsArray().length === 0 ? (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-lg font-medium">No products found</p>
-            </div>
+            <div className="text-center py-20 text-lg font-medium text-red-600">{error}</div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-20 text-lg font-medium">No products found.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {getProductsArray().map((product) => (
-                <Link 
-                  to={`/productveiw/${product.id || product._id}`} 
-                  key={product.id || product._id || Math.random().toString()}
+              {filteredProducts.map((product) => (
+                <Link
+                  to={`/productveiw/${product._id || product.id}`}
+                  key={product._id || product.id}
                   className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative"
                 >
-                  <button 
+                  <button
                     className="absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100"
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
+                    onClick={(e) => e.preventDefault()}
                   >
-                    <Heart size={18} color="#000" fill="none" />
+                    <Heart size={18} color="#000" />
                   </button>
                   <img
                     src={product.images || "https://via.placeholder.com/150"}
@@ -126,12 +92,7 @@ const Product = () => {
                   />
                   <h3 className="text-sm font-medium mb-2">{product.name}</h3>
                   <p className="text-lg font-bold mb-2">${product.price}</p>
-                  <button 
-                    className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800"
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
-                  >
+                  <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800" onClick={(e) => e.preventDefault()}>
                     Buy Now
                   </button>
                 </Link>
@@ -140,10 +101,10 @@ const Product = () => {
           )}
         </main>
       </div>
-      
+
       <Footer />
     </div>
   );
-}
+};
 
-export default Product
+export default Product;
