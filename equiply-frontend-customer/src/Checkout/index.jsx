@@ -485,22 +485,22 @@ const Checkout = () => {
                     <p className="font-medium">{item.name}</p>
                     <p className="text-gray-600">{item.days} days rental</p>
                   </div>
-                  <p>${item.price.toFixed(2)}</p>
+                  <p>₹{item.price.toFixed(2)}</p>
                 </div>
               ))}
             </div>
             <div className="border-t mt-4 pt-3">
               <div className="flex justify-between text-sm">
                 <p>Subtotal</p>
-                <p>${orderSummary.subtotal.toFixed(2)}</p>
+                <p>₹{orderSummary.subtotal.toFixed(2)}</p>
               </div>
               <div className="flex justify-between text-sm mt-1">
                 <p>Tax</p>
-                <p>${orderSummary.tax.toFixed(2)}</p>
+                <p>₹{orderSummary.tax.toFixed(2)}</p>
               </div>
               <div className="flex justify-between font-semibold text-base mt-3">
                 <p>Total</p>
-                <p>${orderSummary.total.toFixed(2)}</p>
+                <p>₹{orderSummary.total.toFixed(2)}</p>
               </div>
             </div>
           </div>

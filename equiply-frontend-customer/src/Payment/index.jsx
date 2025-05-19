@@ -291,7 +291,7 @@ const Payment = () => {
             <div className="border-t mt-2 pt-3">
               <div className="flex justify-between font-semibold text-base mt-3">
                 <p>Total</p>
-                <p>${orderDetails?.total?.toFixed(2) || "0.00"}</p>
+                <p>₹{orderDetails?.total?.toFixed(2) || "0.00"}</p>
               </div>
             </div>
           </div>

@@ -267,7 +267,7 @@ const ProductVeiw = () => {
                         }`}
                         onClick={() => setSelectedRental('hours')}
                       >
-                        <p className="font-semibold">${product.renting.hours}</p>
+                        <p className="font-semibold">₹{product.renting.hours}</p>
                         <p className={`text-sm ${selectedRental === 'hours' ? '' : 'text-gray-500'}`}>per hour</p>
                       </div>
                     )}
@@ -278,7 +278,7 @@ const ProductVeiw = () => {
                         }`}
                         onClick={() => setSelectedRental('days')}
                       >
-                        <p className="font-semibold">${product.renting.days}</p>
+                        <p className="font-semibold">₹{product.renting.days}</p>
                         <p className={`text-sm ${selectedRental === 'days' ? '' : 'text-gray-500'}`}>per day</p>
                       </div>
                     )}
@@ -289,7 +289,7 @@ const ProductVeiw = () => {
                         }`}
                         onClick={() => setSelectedRental('weeks')}
                       >
-                        <p className="font-semibold">${product.renting.weeks}</p>
+                        <p className="font-semibold">₹{product.renting.weeks}</p>
                         <p className={`text-sm ${selectedRental === 'weeks' ? '' : 'text-gray-500'}`}>per week</p>
                       </div>
                     )}
@@ -300,7 +300,7 @@ const ProductVeiw = () => {
                         }`}
                         onClick={() => setSelectedRental('months')}
                       >
-                        <p className="font-semibold">${product.renting.months}</p>
+                        <p className="font-semibold">₹{product.renting.months}</p>
                         <p className={`text-sm ${selectedRental === 'months' ? '' : 'text-gray-500'}`}>per month</p>
                       </div>
                     )}

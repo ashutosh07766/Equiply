@@ -91,9 +91,9 @@ const Product = () => {
                     className="w-28 h-28 object-contain mb-4"
                   />
                   <h3 className="text-sm font-medium mb-2">{product.name}</h3>
-                  <p className="text-lg font-bold mb-2">${product.price}</p>
+                  <p className="text-lg font-bold mb-2">₹{product.price}</p>
                   <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800" onClick={(e) => e.preventDefault()}>
-                    Buy Now
+                    Rent Now
                   </button>
                 </Link>
               ))}
