@@ -37,6 +37,14 @@ const createReview = async (req, res) => {
             });
         }
 
+        // Check if user is banned
+        if (user.status === "banned") {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been banned. You cannot post reviews."
+            });
+        }
+
         // Check if user already reviewed this product
         const existingReview = await Review.findOne({ userId, productId });
         if (existingReview) {
@@ -208,6 +216,22 @@ const updateReview = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: "You can only update your own reviews"
+            });
+        }
+
+        // Check if user is banned
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        if (user.status === "banned") {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been banned. You cannot update reviews."
             });
         }
 

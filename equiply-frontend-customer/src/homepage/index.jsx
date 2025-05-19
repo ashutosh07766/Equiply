@@ -12,21 +12,12 @@ const Homepage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // First try to get featured products
-        const featuredResponse = await fetch("http://localhost:3000/admin/featured-products");
+        // Get featured products from the public endpoint
+        const featuredResponse = await fetch("http://localhost:3000/product/featured");
         const featuredData = await featuredResponse.json();
         
-        // If we have featured products, use them
-        if (featuredData.success && featuredData.featuredProducts && featuredData.featuredProducts.length > 0) {
+        if (featuredData.success && featuredData.featuredProducts) {
           setFeaturedProducts(featuredData.featuredProducts);
-        } else {
-          // Otherwise fall back to regular products
-          const response = await fetch("http://localhost:3000/product");
-          if (!response.ok) {
-            throw new Error("Failed to fetch products");
-          }
-          const data = await response.json();
-          setFeaturedProducts(data.products.slice(0, 4)); // Show first 4 products
         }
         
         // Get all products for the "Most Popular" section
@@ -35,9 +26,11 @@ const Homepage = () => {
           throw new Error("Failed to fetch products");
         }
         const data = await response.json();
-        setProducts(data.products); 
+        setProducts(data.products);
+        
         setLoading(false);
       } catch (err) {
+        console.error("Error in fetchProducts:", err);
         setError(err.message);
         setLoading(false);
       }

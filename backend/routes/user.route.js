@@ -1,8 +1,9 @@
-const express=require('express');
-const {check}=require('express-validator');   
-const jwt=require('jsonwebtoken')
-const auth =require('../middleware/auth.js')
-const isAdmin=require('../middleware/isAdmin.js')
+const express = require('express');
+const {check} = require('express-validator');   
+const jwt = require('jsonwebtoken');
+const auth = require('../middleware/auth.js');
+const checkBanned = require('../middleware/checkBanned.js');
+const isAdmin = require('../middleware/isAdmin.js');
 const {
     updateUser,
     deleteUser,
@@ -15,30 +16,32 @@ const {
     setDefaultAddress
 } = require('../controllers/user.controller.js');
 
-const userRouter=express.Router();
+const userRouter = express.Router();
 
-userRouter.post('/signin',[
+// Public routes
+userRouter.post('/signin', [
     check('email').not().normalizeEmail(),
     check('password').not()
-],signinUser)
+], signinUser);
 
-userRouter.post('/signup',[
+userRouter.post('/signup', [
     check('email').not().normalizeEmail(),
     check('password').notEmpty()
-],signupUser)
+], signupUser);
 
-// Address management routes
-userRouter.get('/addresses', auth, getUserAddresses);
-userRouter.post('/address', auth, [
+// Protected routes
+userRouter.get('/addresses', auth, checkBanned, getUserAddresses);
+userRouter.post('/address', auth, checkBanned, [
     check('label').notEmpty().withMessage('Address label is required'),
     check('address').notEmpty().withMessage('Full address is required'),
     check('phone').notEmpty().withMessage('Phone number is required')
 ], addUserAddress);
-userRouter.put('/address/:addressId', auth, updateUserAddress);
-userRouter.delete('/address/:addressId', auth, deleteUserAddress);
-userRouter.put('/default-address', auth, setDefaultAddress);
+userRouter.put('/address/:addressId', auth, checkBanned, updateUserAddress);
+userRouter.delete('/address/:addressId', auth, checkBanned, deleteUserAddress);
+userRouter.put('/default-address', auth, checkBanned, setDefaultAddress);
 
-userRouter.patch('/:email',updateUser)
-userRouter.delete('/:email',deleteUser)
+// Admin routes
+userRouter.patch('/:email', auth, checkBanned, updateUser);
+userRouter.delete('/:email', auth, checkBanned, deleteUser);
 
-module.exports=userRouter;
+module.exports = userRouter;

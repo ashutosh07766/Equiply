@@ -116,8 +116,36 @@ const createProduct = async (req, res) => {
     }
 };
 
+// Get featured products
+const getFeaturedProducts = async (req, res) => {
+    try {
+        const featuredProducts = await productModel.find({ isFeatured: true });
+        
+        if (featuredProducts.length === 0) {
+            // If no featured products, return the first 4 products
+            const defaultProducts = await productModel.find().limit(4);
+            return res.status(200).json({
+                success: true,
+                featuredProducts: defaultProducts
+            });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            featuredProducts: featuredProducts
+        });
+    } catch (error) {
+        console.error('Error fetching featured products:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while fetching featured products"
+        });
+    }
+};
+
 module.exports={
     getAllProducts,
     product,
-    createProduct
+    createProduct,
+    getFeaturedProducts
 }

@@ -1,15 +1,16 @@
-const express=require('express');
-const {check}=require('express-validator');   
-const jwt=require('jsonwebtoken');
+const express = require('express');
+const {check} = require('express-validator');   
+const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth.js');
+const checkBanned = require('../middleware/checkBanned.js');
 
-const {getAllProducts, product, createProduct}=require('../controllers/products.controller.js');
+const {getAllProducts, product, createProduct} = require('../controllers/products.controller.js');
 
-const productRouter=express.Router();
+const productRouter = express.Router();
 
-productRouter.get('/',getAllProducts);
-productRouter.get('/:id',product);
-productRouter.post('/', auth, [
+productRouter.get('/', getAllProducts);
+productRouter.get('/:id', product);
+productRouter.post('/', auth, checkBanned, [
     check('name').notEmpty().withMessage('Product name is required'),
     check('description').notEmpty().withMessage('Description is required'),
     check('price').isNumeric().withMessage('Price must be a number'),
@@ -17,4 +18,4 @@ productRouter.post('/', auth, [
     check('location').notEmpty().withMessage('Location is required'),
 ], createProduct);
 
-module.exports=productRouter;
+module.exports = productRouter;

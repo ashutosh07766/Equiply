@@ -2,7 +2,6 @@ const { validationResult } = require('express-validator');
 const Order = require('../db/models/order.js');
 const User = require('../db/models/user.js');
 const Product = require('../db/models/seedproduct.js');
-const Review = require('../db/models/review.js');
 const mongoose = require('mongoose');
 
 // Get dashboard statistics
@@ -13,11 +12,6 @@ const getDashboardStats = async (req, res) => {
         const productCount = await Product.countDocuments();
         const orderCount = await Order.countDocuments();
         
-        // Get recent orders
-        const recentOrders = await Order.find()
-            .sort({ createdAt: -1 })
-            .limit(5);
-            
         // Calculate revenue
         const completedOrders = await Order.find({ status: 'paid' });
         const totalRevenue = completedOrders.reduce((sum, order) => sum + order.total, 0);
@@ -29,8 +23,7 @@ const getDashboardStats = async (req, res) => {
                 productCount,
                 orderCount,
                 totalRevenue
-            },
-            recentOrders
+            }
         });
     } catch (error) {
         console.error('Error fetching admin stats:', error);
@@ -88,6 +81,13 @@ const manageUser = async (req, res) => {
                 success: true,
                 message: "User has been banned"
             });
+        } else if (action === "unban") {
+            user.status = "active";
+            await user.save();
+            return res.status(200).json({
+                success: true,
+                message: "User has been unbanned"
+            });
         } else if (action === "delete") {
             await User.findByIdAndDelete(userId);
             return res.status(200).json({
@@ -109,68 +109,10 @@ const manageUser = async (req, res) => {
     }
 };
 
-// Get all orders
-const getAllOrders = async (req, res) => {
-    try {
-        const orders = await Order.find().sort({ createdAt: -1 });
-        
-        return res.status(200).json({
-            success: true,
-            count: orders.length,
-            orders
-        });
-    } catch (error) {
-        console.error('Error fetching orders:', error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error while fetching orders"
-        });
-    }
-};
-
-// Update order status
-const updateOrderStatus = async (req, res) => {
-    try {
-        const { orderId } = req.params;
-        const { status } = req.body;
-        
-        if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid order ID format"
-            });
-        }
-        
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Order not found"
-            });
-        }
-        
-        order.status = status;
-        order.updatedAt = Date.now();
-        await order.save();
-        
-        return res.status(200).json({
-            success: true,
-            message: "Order status updated successfully",
-            order
-        });
-    } catch (error) {
-        console.error('Error updating order status:', error);
-        return res.status(500).json({
-            success: false, 
-            message: "Server error while updating order status"
-        });
-    }
-};
-
 // Get all products
 const getAllProducts = async (req, res) => {
     try {
-        const products = await Product.find().sort({ createdAt: -1 });
+        const products = await Product.find();
         
         return res.status(200).json({
             success: true,
@@ -246,14 +188,6 @@ const deleteProduct = async (req, res) => {
             });
         }
         
-        const product = await Product.findById(productId);
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found"
-            });
-        }
-        
         await Product.findByIdAndDelete(productId);
         
         return res.status(200).json({
@@ -269,10 +203,68 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+// Get all orders
+const getAllOrders = async (req, res) => {
+    try {
+        const orders = await Order.find();
+        
+        return res.status(200).json({
+            success: true,
+            count: orders.length,
+            orders
+        });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while fetching orders"
+        });
+    }
+};
+
+// Update order status
+const updateOrderStatus = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { status } = req.body;
+        
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid order ID format"
+            });
+        }
+        
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found"
+            });
+        }
+        
+        order.status = status;
+        order.updatedAt = Date.now();
+        await order.save();
+        
+        return res.status(200).json({
+            success: true,
+            message: "Order status updated successfully",
+            order
+        });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        return res.status(500).json({
+            success: false, 
+            message: "Server error while updating order status"
+        });
+    }
+};
+
 // Get featured products
 const getFeaturedProducts = async (req, res) => {
     try {
-        const featuredProducts = await Product.find({ isFeatured: true }).limit(4);
+        const featuredProducts = await Product.find({ isFeatured: true });
         
         return res.status(200).json({
             success: true,
@@ -326,11 +318,11 @@ module.exports = {
     getDashboardStats,
     getAllUsers,
     manageUser,
-    getAllOrders,
-    updateOrderStatus,
     getAllProducts,
     updateProduct,
     deleteProduct,
+    getAllOrders,
+    updateOrderStatus,
     getFeaturedProducts,
     setFeaturedProducts
 };
