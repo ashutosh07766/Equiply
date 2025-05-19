@@ -33,10 +33,11 @@ const ProductVeiw = () => {
   const [reviewStats, setReviewStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [newReview, setNewReview] = useState({ rating: 0, comment: '' }); // Changed from 5 to 0
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [selectedRental, setSelectedRental] = useState('days');
 
   useEffect(() => {
     // Check if user is logged in
@@ -115,6 +116,11 @@ const ProductVeiw = () => {
       return;
     }
     
+    if (newReview.rating === 0) {
+      setReviewError('Please select a rating');
+      return;
+    }
+    
     if (!newReview.comment.trim()) {
       setReviewError('Please enter a comment');
       return;
@@ -145,7 +151,7 @@ const ProductVeiw = () => {
       }
       
       // Reset form and refresh reviews
-      setNewReview({ rating: 5, comment: '' });
+      setNewReview({ rating: 0, comment: '' });
       
       // Refetch reviews to include the new one
       const updatedReviewsResponse = await fetch(`http://localhost:3000/review/product/${id}`);
@@ -176,14 +182,13 @@ const ProductVeiw = () => {
       return;
     }
     
-    // Store selected product info in localStorage for checkout
     const rentalProduct = {
       id: product._id,
       name: product.name,
-      price: parseFloat(product.renting?.days || product.price),
+      price: parseFloat(product.renting?.[selectedRental] || product.price),
       image: product.images,
-      rentalDuration: 'days',
-      rentalPeriod: 3, // Default to 3 days rental
+      rentalDuration: selectedRental,
+      rentalPeriod: 1,
       category: product.category
     };
     
@@ -256,27 +261,47 @@ const ProductVeiw = () => {
                 {product.renting && (
                   <>
                     {product.renting.hours && (
-                      <div className="border rounded-lg p-2 text-center">
+                      <div 
+                        className={`border rounded-lg p-2 text-center cursor-pointer ${
+                          selectedRental === 'hours' ? 'bg-black text-white' : ''
+                        }`}
+                        onClick={() => setSelectedRental('hours')}
+                      >
                         <p className="font-semibold">${product.renting.hours}</p>
-                        <p className="text-sm text-gray-500">per hour</p>
+                        <p className={`text-sm ${selectedRental === 'hours' ? '' : 'text-gray-500'}`}>per hour</p>
                       </div>
                     )}
                     {product.renting.days && (
-                      <div className="border rounded-lg p-2 text-center bg-black text-white">
+                      <div 
+                        className={`border rounded-lg p-2 text-center cursor-pointer ${
+                          selectedRental === 'days' ? 'bg-black text-white' : ''
+                        }`}
+                        onClick={() => setSelectedRental('days')}
+                      >
                         <p className="font-semibold">${product.renting.days}</p>
-                        <p className="text-sm">per day</p>
+                        <p className={`text-sm ${selectedRental === 'days' ? '' : 'text-gray-500'}`}>per day</p>
                       </div>
                     )}
                     {product.renting.weeks && (
-                      <div className="border rounded-lg p-2 text-center">
+                      <div 
+                        className={`border rounded-lg p-2 text-center cursor-pointer ${
+                          selectedRental === 'weeks' ? 'bg-black text-white' : ''
+                        }`}
+                        onClick={() => setSelectedRental('weeks')}
+                      >
                         <p className="font-semibold">${product.renting.weeks}</p>
-                        <p className="text-sm text-gray-500">per week</p>
+                        <p className={`text-sm ${selectedRental === 'weeks' ? '' : 'text-gray-500'}`}>per week</p>
                       </div>
                     )}
                     {product.renting.months && (
-                      <div className="border rounded-lg p-2 text-center">
+                      <div 
+                        className={`border rounded-lg p-2 text-center cursor-pointer ${
+                          selectedRental === 'months' ? 'bg-black text-white' : ''
+                        }`}
+                        onClick={() => setSelectedRental('months')}
+                      >
                         <p className="font-semibold">${product.renting.months}</p>
-                        <p className="text-sm text-gray-500">per month</p>
+                        <p className={`text-sm ${selectedRental === 'months' ? '' : 'text-gray-500'}`}>per month</p>
                       </div>
                     )}
                   </>

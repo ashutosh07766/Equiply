@@ -30,13 +30,13 @@ const Homepage = () => {
   return (
     <div>
       <Header />
-      <div>
-        <div>
-          <div className="m-[12px] w-[1511px] h-52 bg-slate-800 rounded-2xl">
-            <div className="w-72 h-16 justify-start text-white text-3xl font-normal font-['Inter'] leading-loose">
+      <div className="max-w-[90%] mx-auto px-2 sm:px-4">
+        <div className="flex justify-center items-center m-[12px] w-full h-52 bg-slate-800 rounded-2xl">
+          <div className="text-center px-8">
+            <div className="text-white text-3xl font-normal font-['Inter'] leading-loose">
               Why Buy?
             </div>
-            <div className="w-[489px] h-20 justify-start text-white text-5xl font-normal font-['Inter'] leading-loose">
+            <div className="text-white text-5xl font-normal font-['Inter'] leading-loose">
               When you can rent one.
             </div>
           </div>

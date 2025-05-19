@@ -24,11 +24,26 @@ const PutRent = () => {
   const [uploadError, setUploadError] = useState(null);
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Tools"); // Add default categories as needed
+  const [selectedCategory, setSelectedCategory] = useState("Tools");
+  const [availability, setAvailability] = useState({
+    duration: "1",
+    period: "weeks"
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+
+  const categories = [
+    "Tools",
+    "Electronics",
+    "Music",
+    "Transport",
+    "Gaming",
+    "Books",
+    "Costume",
+    "Other"
+  ];
 
   const addPrice = () => {
     // Get all available periods for the new price entry
@@ -193,12 +208,12 @@ const PutRent = () => {
       const productData = {
         name: productName,
         description: productDescription,
-        price: savedPrices[0].price, // Use first price as base price
+        price: savedPrices[0].price,
         category: selectedCategory,
-        images: uploadedImages[0], // Use first uploaded image as main image
+        images: uploadedImages[0],
         location,
         renting: rentingPrices,
-        availability: "Available"
+        availability: `${availability.duration} ${availability.period}` // Format: "2 weeks", "3 months", etc.
       };
 
       const response = await fetch('http://localhost:3000/product', {
@@ -315,6 +330,21 @@ const PutRent = () => {
             </label>
 
             <label className="block text-stone-500 text-lg font-normal font-['Poppins']">
+              Category
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full mt-2 px-6 py-5 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400 font-['Poppins'] appearance-none cursor-pointer"
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-stone-500 text-lg font-normal font-['Poppins']">
               Product Description
               <textarea
                 className="w-full mt-2 px-6 py-5 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400 font-['Poppins'] min-h-[120px] resize-none"
@@ -368,6 +398,29 @@ const PutRent = () => {
                   </div>
                 </div>
               )}
+            </label>
+
+            <label className="block text-stone-500 text-lg font-normal font-['Poppins']">
+              Product Availability
+              <div className="flex gap-4 mt-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={availability.duration}
+                  onChange={(e) => setAvailability(prev => ({ ...prev, duration: e.target.value }))}
+                  className="flex-1 px-6 py-5 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400 font-['Poppins']"
+                  placeholder="Duration"
+                />
+                <select
+                  value={availability.period}
+                  onChange={(e) => setAvailability(prev => ({ ...prev, period: e.target.value }))}
+                  className="flex-1 px-6 py-5 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400 font-['Poppins'] appearance-none cursor-pointer"
+                >
+                  <option value="days">Days</option>
+                  <option value="weeks">Weeks</option>
+                  <option value="months">Months</option>
+                </select>
+              </div>
             </label>
 
             <div className="space-y-4">

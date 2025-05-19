@@ -153,36 +153,42 @@ const Header = () => {
       </div>
 
       <div className="flex items-center space-x-4 text-white text-lg">
-        <div ref={bellRef} className="relative">
-          <FaBell
-            className="cursor-pointer"
-            onClick={() => {
-              setIsNotifOpen(!isNotifOpen);
-              fetchNotifications();
-            }}
-          />
-          {isNotifOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-white text-black rounded-md shadow-lg z-30 max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="px-4 py-2 text-sm">No notifications</div>
-              ) : (
-                notifications.map((notif, index) => (
-                  <div
-                    key={index}
-                    className={`px-4 py-2 text-sm border-b cursor-pointer hover:bg-gray-100 ${
-                      !notif.read ? "bg-blue-100 font-semibold" : ""
-                    }`}
-                    onClick={() => markAsRead(notif._id)}
-                  >
-                    {notif.message}
-                  </div>
-                ))
+        {isLoggedIn && (
+          <>
+            <div ref={bellRef} className="relative">
+              <FaBell
+                className="cursor-pointer"
+                onClick={() => {
+                  setIsNotifOpen(!isNotifOpen);
+                  fetchNotifications();
+                }}
+              />
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white text-black rounded-md shadow-lg z-30 max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-2 text-sm">No notifications</div>
+                  ) : (
+                    notifications.map((notif, index) => (
+                      <div
+                        key={index}
+                        className={`px-4 py-2 text-sm border-b cursor-pointer hover:bg-gray-100 ${
+                          !notif.read ? "bg-blue-100 font-semibold" : ""
+                        }`}
+                        onClick={() => markAsRead(notif._id)}
+                      >
+                        {notif.message}
+                      </div>
+                    ))
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-
-        <FaHeart className="cursor-pointer" />
+            <FaHeart 
+              className="cursor-pointer" 
+              onClick={() => navigate('/wishlist')}
+            />
+          </>
+        )}
         {isLoggedIn ? (
           <div className="relative" ref={userMenuRef}>
             <FaUserCircle
