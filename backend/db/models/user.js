@@ -29,14 +29,24 @@ let userSchema=new mongoose.Schema({
     email:{
         type:String,
         required:true,
-
+        unique: true
     },
     password:{
         type:String,
         required:true,
     },
     phone:{
-        type:Number,
+        type:String,
+    },
+    type: {
+        type: String,
+        enum: ['customer', 'admin'],
+        default: 'customer'
+    },
+    status: {
+        type: String,
+        enum: ['active', 'banned'],
+        default: 'active'
     },
     addresses: [addressSchema],
     defaultAddressId: {

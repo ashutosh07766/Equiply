@@ -19,6 +19,12 @@ if(!user)
 {
     return res.status(404).json({success:false,message:"User not found"})
 }
+
+// Check if the user is banned
+if(user.status === "banned") {
+    return res.status(403).json({success: false, message: "Your account has been banned. Please contact support."});
+}
+
 const isMatch = await bcrypt.compare(body.password, user.password);
 if (!isMatch) {
     return res.status(401).json({ success: false, message: "Invalid credentials" });
@@ -28,7 +34,7 @@ if (!isMatch) {
 else{
     const payload={
         userId:user._id,
-        type:user.type||0,
+        type:user.type,  // Make sure we include the correct type
         name:user.name
       }
       const tokenSecret=process.env.TOKEN_SECRET
@@ -45,7 +51,8 @@ else{
             name: user.name,
             email: user.email,
             phone: user.phone,
-            type: user.type || 0
+            type: user.type,  // Include type in response
+            status: user.status || 'active'  // Include status in response
           }
         });
       });
@@ -55,19 +62,19 @@ else{
 
 }
 
-let signupUser=async (req,res)=>{
-    let errors=validationResult(req);
-    let body=req.body
-    if(errors&&errors.length)
+let signupUser = async (req, res) => {
+    let errors = validationResult(req);
+    let body = req.body
+    if(errors && errors.length)
     {
-        res.status(400).json({success:false,message:errors[0].msg})
+        return res.status(400).json({success:false, message:errors[0].msg});
     }
 
-    let existingUser= await userModel.findOne({email:body.email})
+    let existingUser = await userModel.findOne({email:body.email})
 
     if(existingUser)
     {
-        res.status(404).json({success:false,message:"User already exists"})
+        return res.status(404).json({success:false, message:"User already exists"});
     }
 
     const salt = await bcrypt.genSalt(11);
@@ -77,12 +84,14 @@ let signupUser=async (req,res)=>{
         name: body.name,
         email: body.email,
         password: hashedPassword,
-        phone: body.phone
+        phone: body.phone,
+        type: body.type || 'customer',  // Default to customer if not specified
+        status: 'active'
     });
-    await newUser.save()
-    res.status(201).json({success:true,message:"User created successfully"})
+    
+    await newUser.save();
+    return res.status(201).json({success:true, message:"User created successfully"});
 }
-
 
 let updateUser=async (req,res)=>{
     let email=req.params.email;

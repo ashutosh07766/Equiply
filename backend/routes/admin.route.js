@@ -6,11 +6,11 @@ const {
     getDashboardStats,
     getAllUsers,
     manageUser,
-    getAllOrders,
-    updateOrderStatus,
     getAllProducts,
     updateProduct,
     deleteProduct,
+    getAllOrders,
+    updateOrderStatus,
     getFeaturedProducts,
     setFeaturedProducts
 } = require('../controllers/admin.controller.js');
@@ -27,8 +27,13 @@ adminRouter.get('/dashboard', getDashboardStats);
 // User management
 adminRouter.get('/users', getAllUsers);
 adminRouter.patch('/user/:userId', [
-    check('action').isIn(['ban', 'delete']).withMessage('Invalid action')
+    check('action').isIn(['ban', 'unban', 'delete']).withMessage('Invalid action')
 ], manageUser);
+
+// Product management
+adminRouter.get('/products', getAllProducts);
+adminRouter.patch('/product/:productId', updateProduct);
+adminRouter.delete('/product/:productId', deleteProduct);
 
 // Order management
 adminRouter.get('/orders', getAllOrders);
@@ -36,13 +41,10 @@ adminRouter.patch('/order/:orderId', [
     check('status').isIn(['pending', 'paid', 'cancelled', 'delivered']).withMessage('Invalid order status')
 ], updateOrderStatus);
 
-// Product management
-adminRouter.get('/products', getAllProducts);
-adminRouter.patch('/product/:productId', updateProduct);
-adminRouter.delete('/product/:productId', deleteProduct);
-
 // Featured products
 adminRouter.get('/featured-products', getFeaturedProducts);
-adminRouter.post('/set-featured', setFeaturedProducts);
+adminRouter.post('/set-featured', [
+    check('productIds').isArray().withMessage('Product IDs must be an array')
+], setFeaturedProducts);
 
 module.exports = adminRouter;

@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Import our API utility
+// Add this line to import the api utility
+import api from '../utils/api';
+
 const AdminLogin = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,6 +17,7 @@ const AdminLogin = ({ onLogin }) => {
     setError('');
     
     try {
+      // Use regular axios for login since we're not authenticated yet
       const response = await axios.post('http://localhost:3000/user/signin', {
         email,
         password
@@ -99,15 +104,23 @@ const DashboardStats = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        // Make sure we have a valid token before making the request
         const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Not authenticated. Please log in again.');
+          setLoading(false);
+          return;
+        }
+
         const response = await axios.get('http://localhost:3000/admin/dashboard', {
           headers: {
             'x-access-token': token
           }
         });
+        
         setStats(response.data.stats);
       } catch (error) {
-        setError('Failed to load dashboard statistics');
+        setError('Failed to load dashboard statistics: ' + (error.response?.data?.message || error.message));
         console.error(error);
       } finally {
         setLoading(false);
@@ -168,12 +181,8 @@ const UsersList = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3000/admin/users', {
-          headers: {
-            'x-access-token': token
-          }
-        });
+        // Use our api utility
+        const response = await api.get('/admin/users');
         setUsers(response.data.users);
       } catch (error) {
         setError('Failed to load users');
@@ -189,28 +198,29 @@ const UsersList = () => {
   const handleUserAction = async (userId, action) => {
     try {
       setActionLoading(userId);
-      const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:3000/admin/user/${userId}`, 
-        { action },
-        {
-          headers: {
-            'x-access-token': token
-          }
-        }
-      );
+      
+      console.log(`Attempting to ${action} user ${userId}`);
+      
+      // Use our api utility
+      await api.patch(`/admin/user/${userId}`, { action });
       
       if (action === 'ban') {
         // Update user status in the state
         setUsers(users.map(user => 
           user._id === userId ? { ...user, status: 'banned' } : user
         ));
+      } else if (action === 'unban') {
+        // Update user status in the state
+        setUsers(users.map(user => 
+          user._id === userId ? { ...user, status: 'active' } : user
+        ));
       } else if (action === 'delete') {
         // Remove user from state
         setUsers(users.filter(user => user._id !== userId));
       }
     } catch (error) {
-      setError(`Failed to ${action} user`);
-      console.error(error);
+      console.error(`Failed to ${action} user:`, error.response ? error.response.data : error);
+      setError(`Failed to ${action} user: ${error.response?.data?.message || error.message}`);
     } finally {
       setActionLoading(null);
     }
@@ -223,6 +233,7 @@ const UsersList = () => {
     <div className="card mb-4">
       <div className="card-header">All Users</div>
       <div className="card-body">
+        {error && <div className="alert alert-danger">{error}</div>}
         <div className="table-responsive">
           <table className="table table-striped table-bordered">
             <thead>
@@ -244,16 +255,30 @@ const UsersList = () => {
                   <td>{user.email}</td>
                   <td>{user.phone || 'N/A'}</td>
                   <td>{user.type || 'customer'}</td>
-                  <td>{user.status || 'active'}</td>
+                  <td>
+                    <span className={`badge ${user.status === 'banned' ? 'bg-danger' : 'bg-success'}`}>
+                      {user.status || 'active'}
+                    </span>
+                  </td>
                   <td>
                     <div className="btn-group">
-                      <button
-                        className="btn btn-warning btn-sm"
-                        onClick={() => handleUserAction(user._id, 'ban')}
-                        disabled={actionLoading === user._id || user.status === 'banned' || user.type === 'admin'}
-                      >
-                        {actionLoading === user._id ? 'Processing...' : 'Ban'}
-                      </button>
+                      {user.status === 'banned' ? (
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => handleUserAction(user._id, 'unban')}
+                          disabled={actionLoading === user._id || user.type === 'admin'}
+                        >
+                          {actionLoading === user._id ? 'Processing...' : 'Unban'}
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-warning btn-sm"
+                          onClick={() => handleUserAction(user._id, 'ban')}
+                          disabled={actionLoading === user._id || user.type === 'admin'}
+                        >
+                          {actionLoading === user._id ? 'Processing...' : 'Ban'}
+                        </button>
+                      )}
                       <button
                         className="btn btn-danger btn-sm ms-1"
                         onClick={() => handleUserAction(user._id, 'delete')}
@@ -282,12 +307,7 @@ const OrdersList = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3000/admin/orders', {
-          headers: {
-            'x-access-token': token
-          }
-        });
+        const response = await api.get('/admin/orders');
         setOrders(response.data.orders);
       } catch (error) {
         setError('Failed to load orders');
@@ -302,15 +322,7 @@ const OrdersList = () => {
 
   const handleStatusUpdate = async (orderId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:3000/admin/order/${orderId}`, 
-        { status: updateStatus.status },
-        {
-          headers: {
-            'x-access-token': token
-          }
-        }
-      );
+      await api.patch(`/admin/order/${orderId}`, { status: updateStatus.status });
       
       // Update the order in the state
       setOrders(orders.map(order => 
@@ -420,12 +432,7 @@ const ProductsList = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3000/admin/products', {
-          headers: {
-            'x-access-token': token
-          }
-        });
+        const response = await api.get('/admin/products');
         setProducts(response.data.products);
         // Extract currently featured products
         const featured = response.data.products
@@ -461,15 +468,9 @@ const ProductsList = () => {
   const handleSaveEdit = async () => {
     try {
       setActionLoading(editingProduct._id);
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `http://localhost:3000/admin/product/${editingProduct._id}`,
-        editingProduct,
-        {
-          headers: {
-            'x-access-token': token
-          }
-        }
+      const response = await api.patch(
+        `/admin/product/${editingProduct._id}`,
+        editingProduct
       );
       
       // Update product in state
@@ -493,12 +494,7 @@ const ProductsList = () => {
     
     try {
       setActionLoading(productId);
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3000/admin/product/${productId}`, {
-        headers: {
-          'x-access-token': token
-        }
-      });
+      await api.delete(`/admin/product/${productId}`);
       
       // Remove product from state
       setProducts(products.filter(product => product._id !== productId));
@@ -525,15 +521,9 @@ const ProductsList = () => {
   const saveFeaturedProducts = async () => {
     try {
       setActionLoading('featured');
-      const token = localStorage.getItem('token');
-      await axios.post(
-        'http://localhost:3000/admin/set-featured',
-        { productIds: featuredProducts },
-        {
-          headers: {
-            'x-access-token': token
-          }
-        }
+      await api.post(
+        '/admin/set-featured',
+        { productIds: featuredProducts }
       );
       
       // Update products in state to reflect featured status

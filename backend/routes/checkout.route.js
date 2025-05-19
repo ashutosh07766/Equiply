@@ -1,6 +1,7 @@
 const express = require('express');
 const { check } = require('express-validator');
 const auth = require('../middleware/auth.js');
+const checkBanned = require('../middleware/checkBanned.js');
 const { 
     createOrder, 
     getUserOrders, 
@@ -13,6 +14,7 @@ const checkoutRouter = express.Router();
 // Create a new order (requires authentication)
 checkoutRouter.post('/',
     auth,
+    checkBanned,
     [
         check('products').isArray().withMessage('Products must be an array'),
         check('products.*.productId').optional(),  // Make productId validation optional
@@ -28,14 +30,15 @@ checkoutRouter.post('/',
 );
 
 // Get all orders for the current user (requires authentication)
-checkoutRouter.get('/my-orders', auth, getUserOrders);
+checkoutRouter.get('/my-orders', auth, checkBanned, getUserOrders);
 
 // Get a specific order by ID (requires authentication)
-checkoutRouter.get('/:orderId', auth, getOrderById);
+checkoutRouter.get('/:orderId', auth, checkBanned, getOrderById);
 
 // Update an order (e.g., cancel) (requires authentication)
 checkoutRouter.patch('/:orderId',
     auth,
+    checkBanned,
     [
         check('status').isIn(['cancelled']).withMessage('Can only update status to cancelled')
     ],

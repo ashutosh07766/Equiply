@@ -1,28 +1,43 @@
-const jwt=require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
+const User = require('../db/models/user.js');
 
-const tokenSecret=process.env.TOKEN_SECRET
+const tokenSecret = process.env.TOKEN_SECRET;
 
-module.exports=(req,res,next)=>{
-    console.log(req.headers)
-    console.log(req.header)
+module.exports = async (req, res, next) => {
+    const token = req.headers["x-access-token"];
 
-    const token=req.headers["x-access-token"];
+    if (!token)
+        return res.status(403).json({success: false, message: "No valid token found"});
 
-    if(!token)
-        return res.status(403).json({success:false,message:"No valid token found"})
-
-    try{
-        const decode=jwt.verify(token,tokenSecret)
+    try {
+        const decode = jwt.verify(token, tokenSecret);
         
-        req.userId= decode.userId;
-
-        let type=decode.type;
-        if(type !== "admin")
-        {
-            return res.status(401).json({success:false,message:"You are not authorised"})
+        req.userId = decode.userId;
+        const userType = decode.type;
+        
+        // First check if user exists and not banned
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
         }
+        
+        if (user.status === "banned") {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been banned. Please contact support."
+            });
+        }
+        
+        // Then check if user is admin
+        if (userType !== "admin") {
+            return res.status(401).json({success: false, message: "You are not authorized as admin"});
+        }
+        
         next();
-    }catch(err){
-        return res.status(401).json({success:false,message:"Token is expired or corrupt"})
+    } catch(err) {
+        return res.status(401).json({success: false, message: "Token is expired or corrupt"});
     }
-}
+};
