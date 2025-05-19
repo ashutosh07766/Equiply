@@ -14,6 +14,7 @@ import Login from "./login";
 import Header from "./header";
 import Footer from "./Footer";
 import OrderConfirmation from "./OrderConfirmation";
+import AdminPage from "./Admin"; // Import the AdminPage component
 
 function App() { 
 
@@ -36,6 +37,7 @@ function App() {
         <Route path="/footer" element={<Footer/>}/>
         <Route path="/productveiw/:id" element={<ProductVeiw />} />
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/admin" element={<AdminPage />} /> {/* Add admin route */}
       </Routes>
     </BrowserRouter>
   )

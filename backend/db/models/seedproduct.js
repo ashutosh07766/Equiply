@@ -7,10 +7,18 @@ const productSchema = new mongoose.Schema({
     description: { type: String, required: true },
     price: { type: Number, required: true },
     category: { type: String, required: true },
-    images: { type: String, required: true },
+    images: {
+        type: [String], // Changed to array of strings
+        required: true,
+        default: []
+    },
     seller: { type: String, required: true },
     location: { type: String, required: true },
     availability: { type: String, required: true },
+    isFeatured: {
+        type: Boolean,
+        default: false
+    },
     renting: {
         hours: { type: Number, required: false },
         days: { type: Number, required: false },

@@ -5,18 +5,37 @@ import { Link } from "react-router-dom";
 
 const Homepage = () => {
   const [products, setProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        // First try to get featured products
+        const featuredResponse = await fetch("http://localhost:3000/admin/featured-products");
+        const featuredData = await featuredResponse.json();
+        
+        // If we have featured products, use them
+        if (featuredData.success && featuredData.featuredProducts && featuredData.featuredProducts.length > 0) {
+          setFeaturedProducts(featuredData.featuredProducts);
+        } else {
+          // Otherwise fall back to regular products
+          const response = await fetch("http://localhost:3000/product");
+          if (!response.ok) {
+            throw new Error("Failed to fetch products");
+          }
+          const data = await response.json();
+          setFeaturedProducts(data.products.slice(0, 4)); // Show first 4 products
+        }
+        
+        // Get all products for the "Most Popular" section
         const response = await fetch("http://localhost:3000/product");
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
         const data = await response.json();
-        setProducts(data.products.slice(0, 4)); // Fetch only the first 4 products
+        setProducts(data.products); 
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -55,9 +74,9 @@ const Homepage = () => {
             <div className="text-center text-red-500">Error: {error}</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 p-6">
-              {products.map((product) => (
+              {featuredProducts.map((product) => (
                 <div
-                  key={product.id || Math.random().toString()}
+                  key={product._id || Math.random().toString()}
                   className="border rounded-lg p-4 flex flex-col items-center text-center"
                 >
                   <img
