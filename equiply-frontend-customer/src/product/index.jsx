@@ -77,7 +77,7 @@ const Product = () => {
                 <Link
                   to={`/productveiw/${product._id || product.id}`}
                   key={product._id || product.id}
-                  className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative"
+                  className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
                 >
                   <button
                     className="absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100"
@@ -90,8 +90,8 @@ const Product = () => {
                     alt={product.name}
                     className="w-28 h-28 object-contain mb-4"
                   />
-                  <h3 className="text-sm font-medium mb-2">{product.name}</h3>
-                  <p className="text-lg font-bold mb-2">₹{product.price}</p>
+                  <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
+                  <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
                   <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800" onClick={(e) => e.preventDefault()}>
                     Rent Now
                   </button>
