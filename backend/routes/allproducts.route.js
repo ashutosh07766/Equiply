@@ -4,11 +4,12 @@ const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth.js');
 const checkBanned = require('../middleware/checkBanned.js');
 
-const {getAllProducts, product, createProduct} = require('../controllers/products.controller.js');
+const {getAllProducts, product, createProduct, getFeaturedProducts} = require('../controllers/products.controller.js');
 
 const productRouter = express.Router();
 
 productRouter.get('/', getAllProducts);
+productRouter.get('/featured', getFeaturedProducts);
 productRouter.get('/:id', product);
 productRouter.post('/', auth, checkBanned, [
     check('name').notEmpty().withMessage('Product name is required'),
