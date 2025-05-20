@@ -19,14 +19,12 @@ const Payment = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate('/login', { state: { redirectTo: '/payment' } });
       return;
     }
-    
-    // Get current order from localStorage
+
     const currentOrder = localStorage.getItem('currentOrder');
     if (!currentOrder) {
       navigate('/checkout');
@@ -44,9 +42,31 @@ const Payment = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let filteredValue = value;
+
+    switch (name) {
+      case 'cardNumber':
+        filteredValue = value.replace(/\D/g, '').slice(0, 16);
+        break;
+      case 'expiryDate':
+        filteredValue = value.replace(/[^0-9/]/g, '').slice(0, 5);
+        if (filteredValue.length === 2 && !filteredValue.includes('/')) {
+          filteredValue = filteredValue + '/';
+        }
+        break;
+      case 'cvc':
+        filteredValue = value.replace(/\D/g, '').slice(0, 4);
+        break;
+      case 'cardholderName':
+        filteredValue = value.replace(/[^a-zA-Z\s]/g, '');
+        break;
+      default:
+        break;
+    }
+
     setCardDetails(prev => ({
       ...prev,
-      [name]: value
+      [name]: filteredValue
     }));
   };
 
@@ -65,31 +85,30 @@ const Payment = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      
       let paymentDetails;
+
       if (paymentMethod === 'card') {
-        // Validate card details
-        if (!cardDetails.cardNumber || !cardDetails.expiryDate || !cardDetails.cvc || !cardDetails.cardholderName) {
+        const { cardNumber, expiryDate, cvc, cardholderName } = cardDetails;
+        if (!cardNumber || !expiryDate || !cvc || !cardholderName) {
           throw new Error("Please fill all card details");
         }
-        
+
         paymentDetails = {
-          cardholderName: cardDetails.cardholderName,
-          last4: cardDetails.cardNumber.slice(-4),
-          expiryDate: cardDetails.expiryDate
+          cardholderName,
+          last4: cardNumber.slice(-4),
+          expiryDate
         };
       } else {
-        // Validate PayPal
-        if (!paypalEmail) {
-          throw new Error("Please enter your PayPal email");
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(paypalEmail)) {
+          throw new Error("Please enter a valid PayPal email address");
         }
-        
+
         paymentDetails = {
-          paypalEmail: paypalEmail
+          paypalEmail
         };
       }
-      
-      // Process payment
+
       const response = await fetch('http://localhost:3000/payment/process', {
         method: 'POST',
         headers: {
@@ -102,26 +121,23 @@ const Payment = () => {
           paymentDetails
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || "Payment processing failed");
       }
-      
-      // Clear checkout data from localStorage
+
       localStorage.removeItem('selectedProducts');
       localStorage.removeItem('currentOrder');
-      
-      // Store confirmation details
+
       localStorage.setItem('orderConfirmation', JSON.stringify({
         orderId: data.order._id,
         status: data.order.status,
         total: data.order.total,
         paymentId: data.payment._id
       }));
-      
-      // Navigate to success page
+
       navigate('/order-confirmation');
     } catch (err) {
       console.error("Payment processing error:", err);
@@ -148,9 +164,7 @@ const Payment = () => {
       <Header />
       <div className="min-h-screen p-8 bg-white flex flex-col justify-center items-center">
         <div className="w-full max-w-3xl">
-          {/* Step Header */}
           <div className="flex items-center justify-between w-full mb-8 relative">
-            {/* Step 1 */}
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center z-10">
                 <FaMapMarkerAlt className="text-xs text-gray-500" />
@@ -160,11 +174,7 @@ const Payment = () => {
                 <p className="text-sm font-semibold text-gray-400">Address</p>
               </div>
             </div>
-            
-            {/* Connecting Line */}
             <div className="h-0.5 bg-gray-300 absolute top-3 left-1/4 right-1/4 z-0"></div>
-            
-            {/* Step 2 */}
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center z-10">
                 <FaCreditCard className="text-xs text-white" />
@@ -175,7 +185,7 @@ const Payment = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="mb-8">
             <h1 className="text-2xl font-bold">Payment Method</h1>
             {error && (
@@ -192,11 +202,7 @@ const Payment = () => {
               }`}
               onClick={() => setPaymentMethod('card')}
             >
-              <input
-                type="radio"
-                checked={paymentMethod === 'card'}
-                onChange={() => setPaymentMethod('card')}
-              />
+              <input type="radio" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
               <FaCreditCard className="text-xl" />
               <span className="font-medium">Credit/Debit Card</span>
             </div>
@@ -207,11 +213,7 @@ const Payment = () => {
               }`}
               onClick={() => setPaymentMethod('paypal')}
             >
-              <input
-                type="radio"
-                checked={paymentMethod === 'paypal'}
-                onChange={() => setPaymentMethod('paypal')}
-              />
+              <input type="radio" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} />
               <FaPaypal className="text-xl" />
               <span className="font-medium">PayPal</span>
             </div>
@@ -226,9 +228,8 @@ const Payment = () => {
                   name="cardNumber"
                   value={cardDetails.cardNumber}
                   onChange={handleInputChange}
-                  placeholder="1234 5678 9012 3456"
+                  placeholder="1234567890123456"
                   className="w-full p-2 border rounded-md"
-                  maxLength="19"
                 />
               </div>
               <div className="flex gap-4">
@@ -241,7 +242,6 @@ const Payment = () => {
                     onChange={handleInputChange}
                     placeholder="MM/YY"
                     className="w-full p-2 border rounded-md"
-                    maxLength="5"
                   />
                 </div>
                 <div className="flex-1">
@@ -253,7 +253,6 @@ const Payment = () => {
                     onChange={handleInputChange}
                     placeholder="123"
                     className="w-full p-2 border rounded-md"
-                    maxLength="4"
                   />
                 </div>
               </div>
@@ -297,18 +296,10 @@ const Payment = () => {
           </div>
 
           <div className="flex justify-between mt-6">
-            <button 
-              className="px-6 py-2 border border-black rounded"
-              onClick={handleBack}
-              disabled={loading}
-            >
+            <button className="px-6 py-2 border border-black rounded" onClick={handleBack} disabled={loading}>
               Back to Checkout
             </button>
-            <button 
-              className="px-6 py-2 bg-black text-white rounded"
-              onClick={handleConfirmPayment}
-              disabled={loading}
-            >
+            <button className="px-6 py-2 bg-black text-white rounded" onClick={handleConfirmPayment} disabled={loading}>
               {loading ? "Processing..." : "Confirm Payment"}
             </button>
           </div>
