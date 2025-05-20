@@ -259,6 +259,12 @@ const ProductVeiw = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="max-w-5xl mx-auto px-4 py-8 flex-grow">
+        <button
+          onClick={() => navigate('/product')}
+          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-black"
+        >
+          <span>←</span> Back to Products
+        </button>
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
             {/* Main Image with Navigation */}
