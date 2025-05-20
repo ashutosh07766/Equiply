@@ -109,7 +109,12 @@ const Header = () => {
   return (
     <header className="bg-[#0D2C85] text-white px-4 py-2 flex items-center justify-between">
       <div className="flex items-center space-x-2">
-        <h1 className="text-3xl font-bold font-['Inknut_Antiqua']">Equiply</h1>
+        <h1 
+          className="text-3xl font-bold font-['Inknut_Antiqua'] cursor-pointer" 
+          onClick={() => navigate('/')}
+        >
+          Equiply
+        </h1>
         <div className="relative" ref={dropdownRef}>
           <div
             className="flex items-center space-x-1 text-sm cursor-pointer hover:text-gray-200"
