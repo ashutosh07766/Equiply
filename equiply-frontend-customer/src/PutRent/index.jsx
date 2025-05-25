@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../header";
+import Footer from "../Footer";
 
 const PutRent = () => {
   const [ratePeriod, setRatePeriod] = useState("days");
@@ -539,6 +540,7 @@ const PutRent = () => {
           </div>
         </div>
       </div>
+                <Footer />
     </div>
   );
 };

@@ -16,6 +16,13 @@ import Footer from "./Footer";
 import OrderConfirmation from "./OrderConfirmation";
 import AdminPage from "./Admin";
 import BannedUserMessage from "./BannedUserMessage";
+import About from "./about";
+import Contact from "./contact";
+import HelpCenter from "./help center";
+import FAQ from "./FAQ";
+import Privacy from "./privacy";
+import Terms from "./Terms";
+import Cookies from "./cookies";
 
 function App() { 
 
@@ -39,7 +46,15 @@ function App() {
         <Route path="/productveiw/:id" element={<ProductVeiw />} />
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/banned" element={<BannedUserMessage />} /> {/* Add banned user route */}
+        <Route path="/banned" element={<BannedUserMessage />} /> 
+        <Route path="/about" element={<About/>}/>
+        <Route path="/contact" element={<Contact/>}/>
+        <Route path="/help" element={<HelpCenter/>}/>
+        <Route path="/faq" element={<FAQ/>}/>
+        <Route path="/privacy" element={<Privacy/>}/>
+        <Route path="/terms" element={<Terms/>}/>
+        <Route path="/cookies" element={<Cookies/>}/>
+        <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
     </BrowserRouter>
   )
