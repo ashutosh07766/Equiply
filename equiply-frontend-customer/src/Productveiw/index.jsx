@@ -42,6 +42,7 @@ const ProductVeiw = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [isOwnProduct, setIsOwnProduct] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -298,6 +299,17 @@ const ProductVeiw = () => {
     }
   };
 
+  useEffect(() => {
+    const checkIfOwnProduct = () => {
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      if (userData && product) {
+        setIsOwnProduct(userData._id === product.seller);
+      }
+    };
+
+    checkIfOwnProduct();
+  }, [product]);
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -411,62 +423,68 @@ const ProductVeiw = () => {
             </div>
             <div className="mb-4">
               <p className="text-xl font-semibold text-gray-800">Rental Pricing:</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                {product.renting && (
-                  <>
-                    {product.renting.hours && (
-                      <div 
-                        className={`border rounded-lg p-2 text-center cursor-pointer ${
-                          selectedRental === 'hours' ? 'bg-black text-white' : ''
-                        }`}
-                        onClick={() => setSelectedRental('hours')}
-                      >
-                        <p className="font-semibold">₹{product.renting.hours}</p>
-                        <p className={`text-sm ${selectedRental === 'hours' ? '' : 'text-gray-500'}`}>per hour</p>
-                      </div>
-                    )}
-                    {product.renting.days && (
-                      <div 
-                        className={`border rounded-lg p-2 text-center cursor-pointer ${
-                          selectedRental === 'days' ? 'bg-black text-white' : ''
-                        }`}
-                        onClick={() => setSelectedRental('days')}
-                      >
-                        <p className="font-semibold">₹{product.renting.days}</p>
-                        <p className={`text-sm ${selectedRental === 'days' ? '' : 'text-gray-500'}`}>per day</p>
-                      </div>
-                    )}
-                    {product.renting.weeks && (
-                      <div 
-                        className={`border rounded-lg p-2 text-center cursor-pointer ${
-                          selectedRental === 'weeks' ? 'bg-black text-white' : ''
-                        }`}
-                        onClick={() => setSelectedRental('weeks')}
-                      >
-                        <p className="font-semibold">₹{product.renting.weeks}</p>
-                        <p className={`text-sm ${selectedRental === 'weeks' ? '' : 'text-gray-500'}`}>per week</p>
-                      </div>
-                    )}
-                    {product.renting.months && (
-                      <div 
-                        className={`border rounded-lg p-2 text-center cursor-pointer ${
-                          selectedRental === 'months' ? 'bg-black text-white' : ''
-                        }`}
-                        onClick={() => setSelectedRental('months')}
-                      >
-                        <p className="font-semibold">₹{product.renting.months}</p>
-                        <p className={`text-sm ${selectedRental === 'months' ? '' : 'text-gray-500'}`}>per month</p>
-                      </div>
-                    )}
-                  </>
-                )}
-                {!product.renting && (
-                  <div className="border rounded-lg p-2 text-center">
-                    <p className="font-semibold">${product.price}</p>
-                    <p className="text-sm text-gray-500">per day</p>
-                  </div>
-                )}
-              </div>
+              {isOwnProduct ? (
+                <div className="text-red-500 mt-2">
+                  You cannot rent your own product
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                  {product.renting && (
+                    <>
+                      {product.renting.hours && (
+                        <div 
+                          className={`border rounded-lg p-2 text-center cursor-pointer ${
+                            selectedRental === 'hours' ? 'bg-black text-white' : ''
+                          }`}
+                          onClick={() => setSelectedRental('hours')}
+                        >
+                          <p className="font-semibold">₹{product.renting.hours}</p>
+                          <p className={`text-sm ${selectedRental === 'hours' ? '' : 'text-gray-500'}`}>per hour</p>
+                        </div>
+                      )}
+                      {product.renting.days && (
+                        <div 
+                          className={`border rounded-lg p-2 text-center cursor-pointer ${
+                            selectedRental === 'days' ? 'bg-black text-white' : ''
+                          }`}
+                          onClick={() => setSelectedRental('days')}
+                        >
+                          <p className="font-semibold">₹{product.renting.days}</p>
+                          <p className={`text-sm ${selectedRental === 'days' ? '' : 'text-gray-500'}`}>per day</p>
+                        </div>
+                      )}
+                      {product.renting.weeks && (
+                        <div 
+                          className={`border rounded-lg p-2 text-center cursor-pointer ${
+                            selectedRental === 'weeks' ? 'bg-black text-white' : ''
+                          }`}
+                          onClick={() => setSelectedRental('weeks')}
+                        >
+                          <p className="font-semibold">₹{product.renting.weeks}</p>
+                          <p className={`text-sm ${selectedRental === 'weeks' ? '' : 'text-gray-500'}`}>per week</p>
+                        </div>
+                      )}
+                      {product.renting.months && (
+                        <div 
+                          className={`border rounded-lg p-2 text-center cursor-pointer ${
+                            selectedRental === 'months' ? 'bg-black text-white' : ''
+                          }`}
+                          onClick={() => setSelectedRental('months')}
+                        >
+                          <p className="font-semibold">₹{product.renting.months}</p>
+                          <p className={`text-sm ${selectedRental === 'months' ? '' : 'text-gray-500'}`}>per month</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {!product.renting && (
+                    <div className="border rounded-lg p-2 text-center">
+                      <p className="font-semibold">${product.price}</p>
+                      <p className="text-sm text-gray-500">per day</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-4 mb-4">
               <button 
@@ -480,12 +498,17 @@ const ProductVeiw = () => {
                 <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
                 {isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
               </button>
-              <button 
-                className="bg-black text-white px-4 py-2 rounded-lg hover:opacity-90"
-                onClick={handleRentNow}  
-              >
-                Rent Now
-              </button>
+              {!isOwnProduct && (
+                <button 
+                  className={`bg-black text-white px-4 py-2 rounded-lg ${
+                    isOwnProduct ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                  }`}
+                  onClick={handleRentNow}
+                  disabled={isOwnProduct}
+                >
+                  Rent Now
+                </button>
+              )}
             </div>
             <div className="text-sm text-gray-600 mb-2"> Available for: {product.availability || 'Limited time'}</div>
             <div className="text-sm text-gray-600 mb-2"> Location: {product.location || 'Not specified'}</div>
