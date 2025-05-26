@@ -11,14 +11,16 @@ import {
   FaUpload,
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import indianCities from "../data/cities";
 import axios from "axios";
+import { WishlistContext } from '../product';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+  const { wishlistItems = [] } = useContext(WishlistContext) || {};
 
   const [searchTerm, setSearchTerm] = useState(params.get("search") || "");
   const [selectedCity, setSelectedCity] = useState("Bengaluru");
@@ -27,7 +29,6 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [wishlistCount, setWishlistCount] = useState(0);
 
   const dropdownRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -55,26 +56,8 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const fetchWishlistCount = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) return;
-
-      try {
-        const response = await axios.get('http://localhost:3000/wishlist', {
-          headers: { 'x-access-token': token }
-        });
-        setWishlistCount(response.data.length);
-      } catch (error) {
-        console.error('Error fetching wishlist count:', error);
-      }
-    };
-
-    fetchWishlistCount();
-  }, [location.pathname]); // Refetch when route changes
-
   const fetchNotifications = async () => {
-    if (!userId) return; // no userId, skip fetch
+    if (!userId) return;
     try {
       const { data } = await axios.get(`http://localhost:3000/api/notifications/${userId}`);
       setNotifications(data);
@@ -91,8 +74,6 @@ const Header = () => {
           notif._id === id ? { ...notif, read: true } : notif
         )
       );
-      // Optional: close dropdown on click
-      // setIsNotifOpen(false);
     } catch (err) {
       console.error("Failed to mark notification as read", err);
     }
@@ -213,9 +194,9 @@ const Header = () => {
                   className="cursor-pointer hover:text-red-400 transition-colors" 
                   onClick={() => navigate('/wishlist')}
                 />
-                {wishlistCount > 0 && (
+                {wishlistItems.length > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {wishlistCount}
+                    {wishlistItems.length}
                   </span>
                 )}
               </div>

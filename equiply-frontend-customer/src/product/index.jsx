@@ -1,12 +1,66 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, createContext, useContext } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../header";
 import Footer from "../Footer";
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
+import axios from "axios";
+
+// Create Wishlist Context
+export const WishlistContext = createContext();
+
+export const WishlistProvider = ({ children }) => {
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [wishlistUpdateTrigger, setWishlistUpdateTrigger] = useState(0);
+
+  const fetchWishlist = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    
+    try {
+      const response = await axios.get('http://localhost:3000/wishlist', {
+        headers: { 'x-access-token': token }
+      });
+      setWishlistItems(response.data);
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWishlist();
+  }, [wishlistUpdateTrigger]);
+
+  const updateWishlist = () => {
+    setWishlistUpdateTrigger(prev => prev + 1);
+  };
+
+  return (
+    <WishlistContext.Provider value={{ wishlistItems, updateWishlist }}>
+      {children}
+    </WishlistContext.Provider>
+  );
+};
+
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transform transition-all duration-300 ease-in-out bg-blue-500 text-white">
+      {message}
+    </div>
+  );
+};
 
 const Product = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const searchTerm = params.get("search") || "";
 
@@ -14,6 +68,15 @@ const Product = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  
+  const { wishlistItems, updateWishlist } = useContext(WishlistContext);
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    setIsLoggedIn(!!token);
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -37,6 +100,54 @@ const Product = () => {
     );
   };
 
+  const handleWishlistClick = async (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const isInWishlist = wishlistItems.some(item => item._id === productId || item.id === productId);
+      
+      if (isInWishlist) {
+        await axios.delete(`http://localhost:3000/wishlist/remove/${productId}`, {
+          headers: { 'x-access-token': token }
+        });
+        setToast({
+          show: true,
+          message: 'Removed from wishlist',
+          type: 'success'
+        });
+      } else {
+        await axios.post('http://localhost:3000/wishlist/add', 
+          { productId },
+          { headers: { 'x-access-token': token } }
+        );
+        setToast({
+          show: true,
+          message: 'Added to wishlist',
+          type: 'success'
+        });
+      }
+      updateWishlist(); // Update wishlist count globally
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      setToast({
+        show: true,
+        message: 'Error updating wishlist',
+        type: 'error'
+      });
+      if (error.response?.status === 401) {
+        localStorage.removeItem('authToken');
+        navigate('/login');
+      }
+    }
+  };
+
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
@@ -47,6 +158,13 @@ const Product = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: '' })}
+        />
+      )}
 
       <div className="flex flex-col lg:flex-row p-6 gap-6 flex-grow">
         <aside className="w-full lg:w-1/5 space-y-4">
@@ -73,30 +191,41 @@ const Product = () => {
             <div className="text-center py-20 text-lg font-medium">No products found.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <Link
-                  to={`/productveiw/${product._id || product.id}`}
-                  key={product._id || product.id}
-                  className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
-                >
-                  <button
-                    className="absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100"
-                    onClick={(e) => e.preventDefault()}
+              {filteredProducts.map((product) => {
+                const isInWishlist = wishlistItems.some(item => item._id === product._id || item.id === product._id);
+                console.log('Product:', product._id, 'Is in wishlist:', isInWishlist);
+                return (
+                  <div
+                    key={product._id || product.id}
+                    className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
                   >
-                    <Heart size={18} color="#000" />
-                  </button>
-                  <img
-                    src={product.images || "https://via.placeholder.com/150"}
-                    alt={product.name}
-                    className="w-28 h-28 object-contain mb-4"
-                  />
-                  <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
-                  <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
-                  <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800" onClick={(e) => e.preventDefault()}>
-                    Rent Now
-                  </button>
-                </Link>
-              ))}
+                    <button
+                      className={`absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100 transition-colors ${
+                        isInWishlist ? 'text-red-500' : 'text-gray-400'
+                      }`}
+                      onClick={(e) => handleWishlistClick(e, product._id)}
+                      title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                    >
+                      <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
+                    </button>
+                    <Link
+                      to={`/productview/${product._id || product.id}`}
+                      className="w-full flex flex-col items-center"
+                    >
+                      <img
+                        src={product.images || "https://via.placeholder.com/150"}
+                        alt={product.name}
+                        className="w-28 h-28 object-contain mb-4"
+                      />
+                      <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
+                      <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
+                      <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
+                        Rent Now
+                      </button>
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           )}
         </main>
@@ -107,4 +236,11 @@ const Product = () => {
   );
 };
 
-export default Product;
+// Wrap the export with the provider
+export default function ProductWithProvider() {
+  return (
+    <WishlistProvider>
+      <Product />
+    </WishlistProvider>
+  );
+}

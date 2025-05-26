@@ -39,6 +39,7 @@ module.exports=async (req,res,next)=>{
             });
         }
         
+        req.user = user;
         console.log('Auth middleware - Authentication successful for user:', req.userId);
         next();
     }catch(err){
