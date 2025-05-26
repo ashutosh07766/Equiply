@@ -71,14 +71,8 @@ const OAuthCallback = () => {
           }
         }
 
-        // Redirect back to where the user was, or to home page
-        const returnPath = sessionStorage.getItem('auth_return_to') || '/';
-        sessionStorage.removeItem('auth_return_to');
-        
-        console.log("Authentication complete, redirecting to:", returnPath);
-        
-        // Using window.location.href ensures a full page reload which will update the header
-        window.location.href = returnPath;
+        // Always redirect to dashboard after Google auth regardless of previous page
+        window.location.href = '/';
 
       } catch (error) {
         console.error('OAuth callback error:', error);
