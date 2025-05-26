@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../header';
 import Footer from '../Footer';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -11,9 +11,16 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({});
   const [activeTab, setActiveTab] = useState('profile');
-  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
+  const [newAddress, setNewAddress] = useState({
+    label: '',
+    type: 'Home',
+    address: '',
+    phone: ''
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -22,33 +29,33 @@ const Profile = () => {
       return;
     }
 
-    const fetchUserData = async () => {
+    const fetchProfileData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/user/profile', {
+        const response = await axios.get('http://localhost:3000/api/profile', {
           headers: { 'x-access-token': token }
         });
-        setUserData(response.data);
-        setEditedData(response.data);
+        
+        console.log('Raw API Response:', response.data);
+        
+        const { user } = response.data;
+        
+        // Ensure we have valid data
+        if (!user) {
+          throw new Error('No user data received');
+        }
+
+        // Set user data
+        setUserData(user);
+        setEditedData(user);
         setLoading(false);
       } catch (error) {
+        console.error('Error fetching profile:', error);
         setError('Failed to load profile data');
         setLoading(false);
       }
     };
 
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/orders', {
-          headers: { 'x-access-token': token }
-        });
-        setOrders(response.data);
-      } catch (error) {
-        console.error('Failed to fetch orders:', error);
-      }
-    };
-
-    fetchUserData();
-    fetchOrders();
+    fetchProfileData();
   }, [navigate]);
 
   const handleEdit = () => {
@@ -63,12 +70,14 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.put('http://localhost:3000/api/user/profile', editedData, {
+      const response = await axios.put('http://localhost:3000/api/profile', editedData, {
         headers: { 'x-access-token': token }
       });
-      setUserData(response.data);
+      
+      setUserData(response.data.user);
       setIsEditing(false);
     } catch (error) {
+      console.error('Error updating profile:', error);
       setError('Failed to update profile');
     }
   };
@@ -79,6 +88,83 @@ const Profile = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleAddAddress = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.post('http://localhost:3000/api/profile/address', newAddress, {
+        headers: { 'x-access-token': token }
+      });
+      
+      setUserData(prev => ({
+        ...prev,
+        addresses: response.data.addresses
+      }));
+      setIsAddingAddress(false);
+      setNewAddress({
+        label: '',
+        type: 'Home',
+        address: '',
+        phone: ''
+      });
+    } catch (error) {
+      console.error('Error adding address:', error);
+      setError('Failed to add address');
+    }
+  };
+
+  const handleEditAddress = async (addressId) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const address = userData.addresses.find(addr => addr._id === addressId);
+      const response = await axios.put(`http://localhost:3000/api/profile/address/${addressId}`, address, {
+        headers: { 'x-access-token': token }
+      });
+      
+      setUserData(prev => ({
+        ...prev,
+        addresses: response.data.addresses
+      }));
+      setEditingAddressId(null);
+    } catch (error) {
+      console.error('Error updating address:', error);
+      setError('Failed to update address');
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.delete(`http://localhost:3000/api/profile/address/${addressId}`, {
+        headers: { 'x-access-token': token }
+      });
+      
+      setUserData(prev => ({
+        ...prev,
+        addresses: response.data.addresses
+      }));
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      setError('Failed to delete address');
+    }
+  };
+
+  const handleAddressInputChange = (e) => {
+    const { name, value } = e.target;
+    if (editingAddressId) {
+      setUserData(prev => ({
+        ...prev,
+        addresses: prev.addresses.map(addr =>
+          addr._id === editingAddressId ? { ...addr, [name]: value } : addr
+        )
+      }));
+    } else {
+      setNewAddress(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   if (loading) {
@@ -122,24 +208,16 @@ const Profile = () => {
             </button>
             <button
               className={`px-4 py-2 rounded-lg ${
-                activeTab === 'orders' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'
+                activeTab === 'addresses' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'
               }`}
-              onClick={() => setActiveTab('orders')}
+              onClick={() => setActiveTab('addresses')}
             >
-              Orders
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'settings' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'
-              }`}
-              onClick={() => setActiveTab('settings')}
-            >
-              Settings
+              Addresses
             </button>
           </div>
 
           {/* Profile Content */}
-          {activeTab === 'profile' && (
+          {activeTab === 'profile' && userData && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">Profile Information</h2>
@@ -149,7 +227,7 @@ const Profile = () => {
                     className="flex items-center space-x-2 text-blue-500 hover:text-blue-600"
                   >
                     <FaEdit />
-                    <span>Edit Profile</span>
+                    <span>Edit</span>
                   </button>
                 ) : (
                   <div className="flex space-x-2">
@@ -171,7 +249,7 @@ const Profile = () => {
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center space-x-4">
                   <FaUser className="text-gray-400" />
                   <div className="flex-1">
@@ -185,7 +263,7 @@ const Profile = () => {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       />
                     ) : (
-                      <p className="mt-1">{userData?.name}</p>
+                      <p className="mt-1">{userData.name || 'Not provided'}</p>
                     )}
                   </div>
                 </div>
@@ -194,17 +272,7 @@ const Profile = () => {
                   <FaEnvelope className="text-gray-400" />
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-700">Email</label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        name="email"
-                        value={editedData.email || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="mt-1">{userData?.email}</p>
-                    )}
+                    <p className="mt-1">{userData.email || 'Not provided'}</p>
                   </div>
                 </div>
 
@@ -221,25 +289,7 @@ const Profile = () => {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       />
                     ) : (
-                      <p className="mt-1">{userData?.phone || 'Not provided'}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-4">
-                  <FaMapMarkerAlt className="text-gray-400" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700">Address</label>
-                    {isEditing ? (
-                      <textarea
-                        name="address"
-                        value={editedData.address || ''}
-                        onChange={handleInputChange}
-                        rows="3"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="mt-1">{userData?.address || 'Not provided'}</p>
+                      <p className="mt-1">{userData.phone || 'Not provided'}</p>
                     )}
                   </div>
                 </div>
@@ -247,72 +297,188 @@ const Profile = () => {
             </div>
           )}
 
-          {/* Orders Content */}
-          {activeTab === 'orders' && (
+          {/* Addresses Content */}
+          {activeTab === 'addresses' && (
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-6">Order History</h2>
-              {orders.length === 0 ? (
-                <p className="text-gray-500">No orders found.</p>
-              ) : (
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">My Addresses</h2>
+                {!isAddingAddress && (
+                  <button
+                    onClick={() => setIsAddingAddress(true)}
+                    className="flex items-center space-x-2 text-blue-500 hover:text-blue-600"
+                  >
+                    <FaPlus />
+                    <span>Add Address</span>
+                  </button>
+                )}
+              </div>
+
+              {isAddingAddress && (
+                <div className="border rounded-lg p-4 mb-4">
+                  <h3 className="text-lg font-medium mb-4">Add New Address</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Label</label>
+                      <input
+                        type="text"
+                        name="label"
+                        value={newAddress.label}
+                        onChange={handleAddressInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="e.g., Home, Office"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Type</label>
+                      <select
+                        name="type"
+                        value={newAddress.type}
+                        onChange={handleAddressInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      >
+                        <option value="Home">Home</option>
+                        <option value="Office">Office</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Address</label>
+                      <textarea
+                        name="address"
+                        value={newAddress.address}
+                        onChange={handleAddressInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        rows="3"
+                        placeholder="Enter your full address"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Phone</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={newAddress.phone}
+                        onChange={handleAddressInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => setIsAddingAddress(false)}
+                        className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleAddAddress}
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Save Address
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {userData?.addresses && userData.addresses.length > 0 ? (
                 <div className="space-y-4">
-                  {orders.map((order) => (
-                    <div key={order._id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">Order #{order._id}</p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </p>
+                  {userData.addresses.map((address) => (
+                    <div key={address._id} className="border rounded-lg p-4">
+                      {editingAddressId === address._id ? (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Label</label>
+                            <input
+                              type="text"
+                              name="label"
+                              value={address.label}
+                              onChange={handleAddressInputChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Type</label>
+                            <select
+                              name="type"
+                              value={address.type}
+                              onChange={handleAddressInputChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            >
+                              <option value="Home">Home</option>
+                              <option value="Office">Office</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea
+                              name="address"
+                              value={address.address}
+                              onChange={handleAddressInputChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Phone</label>
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={address.phone}
+                              onChange={handleAddressInputChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => setEditingAddressId(null)}
+                              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => handleEditAddress(address._id)}
+                              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {order.status}
-                        </span>
-                      </div>
-                      <div className="mt-2">
-                        <p className="text-sm">Total: ₹{order.total}</p>
-                      </div>
+                      ) : (
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{address.label}</p>
+                            <p className="text-sm text-gray-600 mt-1">{address.address}</p>
+                            <p className="text-sm text-gray-600 mt-1">Phone: {address.phone}</p>
+                          </div>
+                          <div className="flex space-x-2">
+                            {address.isDefault && (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                Default
+                              </span>
+                            )}
+                            <button
+                              onClick={() => setEditingAddressId(address._id)}
+                              className="text-blue-500 hover:text-blue-600"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAddress(address._id)}
+                              className="text-red-500 hover:text-red-600"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+              ) : (
+                <p className="text-gray-500">No addresses found.</p>
               )}
-            </div>
-          )}
-
-          {/* Settings Content */}
-          {activeTab === 'settings' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-6">Account Settings</h2>
-              <div className="space-y-4">
-                <div className="border-b pb-4">
-                  <h3 className="font-medium mb-2">Change Password</h3>
-                  <button className="text-blue-500 hover:text-blue-600">
-                    Update Password
-                  </button>
-                </div>
-                <div className="border-b pb-4">
-                  <h3 className="font-medium mb-2">Notification Preferences</h3>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      Email notifications
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      SMS notifications
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2 text-red-600">Danger Zone</h3>
-                  <button className="text-red-500 hover:text-red-600">
-                    Delete Account
-                  </button>
-                </div>
-              </div>
             </div>
           )}
         </div>

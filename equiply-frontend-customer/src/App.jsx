@@ -3,7 +3,7 @@ import { WishlistProvider } from './product';
 import Homepage from './homepage';
 import Product from './product';
 import Checkout from './Checkout';
-import ProductVeiw from './Productveiw';
+import ProductView from './Productveiw';
 import Signup from './Signup';
 import History from "./History";
 import Payment from "./Payment";
@@ -34,7 +34,7 @@ function App() {
           <Route path="/" element={<Homepage/>}/>
           <Route path="/product" element={<Product/>}/>
           <Route path="/Checkout" element={<Checkout/>}/>
-          <Route path="/ProductVeiw" element={<ProductVeiw/>}/>
+          <Route path="/productview/:productId" element={<ProductView/>}/>
           <Route path="/Signup" element={<Signup/>}/>
           <Route path="/History" element={<History/>}/>
           <Route path="/Payment" element={<Payment/>}/>
@@ -45,7 +45,6 @@ function App() {
           <Route path="/login" element={<Login/>}/>
           <Route path="/header" element={<Header/>}/>
           <Route path="/footer" element={<Footer/>}/>
-          <Route path="/productveiw/:id" element={<ProductVeiw />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/banned" element={<BannedUserMessage />} /> 

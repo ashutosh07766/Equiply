@@ -209,7 +209,7 @@ const Product = () => {
                       <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
                     </button>
                     <Link
-                      to={`/productveiw/${product._id || product.id}`}
+                      to={`/productview/${product._id || product.id}`}
                       className="w-full flex flex-col items-center"
                     >
                       <img

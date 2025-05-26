@@ -12,6 +12,7 @@ const notificationRoutes = require('./routes/notification.route');
 const adminRouter = require('./routes/admin.route.js');
 const wishlistRouter = require('./routes/wishlist.js');
 const oauthRouter = require('./routes/oauth.route.js');
+const profileRouter = require('./routes/profile.route.js');
 
 const connectDB=require('./db/models/connection.js');
 connectDB();
@@ -37,6 +38,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/admin', adminRouter);
 app.use('/wishlist', wishlistRouter);
 app.use('/oauth', oauthRouter);
+app.use('/api/profile', profileRouter);
 
 app.use((req, res) => {
     res.status(404).json({ success: false, message: "Page not found" });
