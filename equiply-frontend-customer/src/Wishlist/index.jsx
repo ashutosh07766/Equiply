@@ -26,10 +26,21 @@ const Wishlist = () => {
                 headers: { 'x-access-token': token }
             });
             console.log('Wishlist response:', response.data);
-            setWishlistItems(response.data);
+            
+            // Handle different response formats
+            const items = Array.isArray(response.data) ? response.data : response.data.items || [];
+            setWishlistItems(items);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching wishlist:', error);
+            if (error.response?.status === 500) {
+                // If wishlist endpoint returns 500, show empty wishlist
+                console.log('Wishlist endpoint error, showing empty state');
+                setWishlistItems([]);
+            } else if (error.response?.status === 401) {
+                localStorage.removeItem('authToken');
+                navigate('/login');
+            }
             setLoading(false);
         }
     };
@@ -45,10 +56,22 @@ const Wishlist = () => {
             await axios.delete(`http://localhost:3000/wishlist/remove/${productId}`, {
                 headers: { 'x-access-token': token }
             });
-            setWishlistItems(wishlistItems.filter(item => item.id !== productId));
+            // Remove item from local state using multiple ID fields
+            setWishlistItems(wishlistItems.filter(item => 
+                item.id !== productId && 
+                item._id !== productId && 
+                item.product?._id !== productId
+            ));
         } catch (error) {
             console.error('Error removing from wishlist:', error);
-            if (error.response?.status === 401) {
+            if (error.response?.status === 500) {
+                // If endpoint doesn't exist, just remove from local state
+                setWishlistItems(wishlistItems.filter(item => 
+                    item.id !== productId && 
+                    item._id !== productId && 
+                    item.product?._id !== productId
+                ));
+            } else if (error.response?.status === 401) {
                 localStorage.removeItem('authToken');
                 navigate('/login');
             }
@@ -56,15 +79,15 @@ const Wishlist = () => {
     };
 
     const handleProductClick = (productId) => {
-        navigate(`/product/${productId}`);
+        navigate(`/productview/${productId}`);
     };
 
     const handleRentNow = (item) => {
         const rentalProduct = {
-            id: item.id,
+            id: item._id || item.id,
             name: item.name,
             price: parseFloat(item.price),
-            image: item.image_url,
+            image: item.image_url || (Array.isArray(item.images) ? item.images[0] : item.images),
             rentalDuration: 'days',
             rentalPeriod: 1,
             category: item.category
@@ -98,16 +121,16 @@ const Wishlist = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {wishlistItems.map((item) => (
-                            <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div key={item._id || item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                                 <img 
-                                    src={item.image_url} 
+                                    src={item.image_url || (Array.isArray(item.images) ? item.images[0] : item.images) || "https://via.placeholder.com/150"} 
                                     alt={item.name} 
-                                    onClick={() => handleProductClick(item.id)}
+                                    onClick={() => handleProductClick(item._id || item.id)}
                                     className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                                 />
                                 <div className="p-4">
                                     <h3 
-                                        onClick={() => handleProductClick(item.id)}
+                                        onClick={() => handleProductClick(item._id || item.id)}
                                         className="text-lg font-semibold mb-2 cursor-pointer hover:text-blue-600"
                                     >
                                         {item.name}
@@ -122,7 +145,7 @@ const Wishlist = () => {
                                         </button>
                                         <button 
                                             className="flex-1 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
-                                            onClick={() => removeFromWishlist(item.id)}
+                                            onClick={() => removeFromWishlist(item._id || item.id)}
                                         >
                                             Remove
                                         </button>

@@ -21,9 +21,15 @@ export const WishlistProvider = ({ children }) => {
       const response = await axios.get('http://localhost:3000/wishlist', {
         headers: { 'x-access-token': token }
       });
-      setWishlistItems(response.data);
+      console.log('Wishlist API Response:', response.data);
+      
+      // Handle different response formats
+      const items = Array.isArray(response.data) ? response.data : response.data.items || [];
+      setWishlistItems(items);
     } catch (error) {
       console.error('Error fetching wishlist:', error);
+      // Set empty array on error instead of failing
+      setWishlistItems([]);
     }
   };
 
@@ -36,7 +42,7 @@ export const WishlistProvider = ({ children }) => {
   };
 
   return (
-    <WishlistContext.Provider value={{ wishlistItems, updateWishlist }}>
+    <WishlistContext.Provider value={{ wishlistItems, updateWishlist, fetchWishlist }}>
       {children}
     </WishlistContext.Provider>
   );
@@ -111,7 +117,12 @@ const Product = () => {
     }
 
     try {
-      const isInWishlist = wishlistItems.some(item => item._id === productId || item.id === productId);
+      // Check if product is in wishlist using both _id and id fields
+      const isInWishlist = wishlistItems.some(item => 
+        item._id === productId || 
+        item.id === productId || 
+        item.product?._id === productId
+      );
       
       if (isInWishlist) {
         await axios.delete(`http://localhost:3000/wishlist/remove/${productId}`, {
@@ -138,7 +149,7 @@ const Product = () => {
       console.error('Error toggling wishlist:', error);
       setToast({
         show: true,
-        message: 'Error updating wishlist',
+        message: error.response?.data?.message || 'Error updating wishlist',
         type: 'error'
       });
       if (error.response?.status === 401) {
@@ -192,8 +203,13 @@ const Product = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {filteredProducts.map((product) => {
-                const isInWishlist = wishlistItems.some(item => item._id === product._id || item.id === product._id);
-                console.log('Product:', product._id, 'Is in wishlist:', isInWishlist);
+                // Check wishlist status with multiple field checks
+                const isInWishlist = wishlistItems.some(item => 
+                  item._id === product._id || 
+                  item.id === product._id || 
+                  item.product?._id === product._id
+                );
+                
                 return (
                   <div
                     key={product._id || product.id}
@@ -213,7 +229,7 @@ const Product = () => {
                       className="w-full flex flex-col items-center"
                     >
                       <img
-                        src={product.images || "https://via.placeholder.com/150"}
+                        src={Array.isArray(product.images) ? product.images[0] : product.images || "https://via.placeholder.com/150"}
                         alt={product.name}
                         className="w-28 h-28 object-contain mb-4"
                       />

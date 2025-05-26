@@ -7,7 +7,7 @@ import ProductView from './Productveiw';
 import Signup from './Signup';
 import History from "./History";
 import Payment from "./Payment";
-import Profile from "./profile";
+import Profile from "./Profile";
 import PutRent from "./PutRent";
 import Wishlist from "./Wishlist";
 import OrderVeiw from "./OrderVeiw";
@@ -38,7 +38,7 @@ function App() {
           <Route path="/Signup" element={<Signup/>}/>
           <Route path="/History" element={<History/>}/>
           <Route path="/Payment" element={<Payment/>}/>
-          <Route path="/Profile" element={<Profile/>}/>
+          <Route path="/profile" element={<Profile/>}/>
           <Route path="/PutRent" element={<PutRent/>}/>
           <Route path="/Wishlist" element={<Wishlist/>}/>
           <Route path="/OrderVeiw" element={<OrderVeiw/>}/>

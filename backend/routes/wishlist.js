@@ -73,22 +73,40 @@ router.get('/', auth, async (req, res) => {
 
         console.log('Found wishlist items:', wishlistItems.length);
 
+        // Check if population failed and handle it
+        const validWishlistItems = wishlistItems.filter(item => item.productId);
+
         // Transform the data to match the frontend expectations
-        const formattedItems = wishlistItems.map(item => ({
-            id: item.productId._id,
-            name: item.productId.name,
-            price: item.productId.price,
-            image_url: item.productId.images[0], // Assuming images is an array
-            category: item.productId.category,
-            description: item.productId.description
-        }));
+        const formattedItems = validWishlistItems.map(item => {
+            // Handle different image formats
+            let imageUrl = item.productId.images;
+            if (Array.isArray(imageUrl)) {
+                imageUrl = imageUrl[0];
+            }
+            
+            return {
+                _id: item.productId._id,
+                id: item.productId._id, // Add both _id and id for compatibility
+                name: item.productId.name,
+                price: item.productId.price,
+                image_url: imageUrl || "https://via.placeholder.com/150",
+                images: item.productId.images,
+                category: item.productId.category,
+                description: item.productId.description || '',
+                product: item.productId // Include the full product object
+            };
+        });
 
         console.log('Formatted items:', formattedItems);
         res.status(200).json(formattedItems);
     } catch (error) {
         console.error('Error getting wishlist:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message,
+            success: false 
+        });
     }
 });
 
-module.exports = router; 
+module.exports = router;
