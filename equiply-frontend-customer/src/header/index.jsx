@@ -20,7 +20,7 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const { wishlistItems } = useContext(WishlistContext);
+  const { wishlistItems = [] } = useContext(WishlistContext) || {};
 
   const [searchTerm, setSearchTerm] = useState(params.get("search") || "");
   const [selectedCity, setSelectedCity] = useState("Bengaluru");
@@ -74,8 +74,6 @@ const Header = () => {
           notif._id === id ? { ...notif, read: true } : notif
         )
       );
-      // Optional: close dropdown on click
-      // setIsNotifOpen(false);
     } catch (err) {
       console.error("Failed to mark notification as read", err);
     }
