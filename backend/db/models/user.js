@@ -56,6 +56,15 @@ let userSchema=new mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now
+    },
+    googleId: { 
+        type: String,
+        sparse: true  // Allows multiple null values
+    },
+    authProvider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local'
     }
 })
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FcGoogle } from "react-icons/fc"
+import GoogleLoginButton from '../components/GoogleLoginButton'
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -173,12 +173,7 @@ const Signup = () => {
 
           <div className="text-center text-sm text-gray-500">OR Continue with</div>
 
-          <button
-            type="button"
-            className="flex items-center justify-center w-1/4 mx-auto border border-gray-300 py-3 rounded-full hover:bg-gray-100 transition"
-          >
-            <FcGoogle className="text-xl mr-2" /> Google
-          </button>
+          <GoogleLoginButton />
         </form>
       </div>
     </div>

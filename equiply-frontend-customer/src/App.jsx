@@ -23,6 +23,7 @@ import FAQ from "./FAQ";
 import Privacy from "./privacy";
 import Terms from "./Terms";
 import Cookies from "./cookies";
+import OAuthCallback from './components/OAuthCallback';
 
 function App() { 
 
@@ -54,6 +55,7 @@ function App() {
         <Route path="/privacy" element={<Privacy/>}/>
         <Route path="/terms" element={<Terms/>}/>
         <Route path="/cookies" element={<Cookies/>}/>
+        <Route path="/oauth-callback" element={<OAuthCallback />} />
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
     </BrowserRouter>

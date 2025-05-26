@@ -10,5 +10,10 @@ export default defineConfig({
     hmr: {
       overlay: false
     }
+  },
+  define: {
+    'process.env': {
+      REACT_APP_GOOGLE_CLIENT_ID: JSON.stringify(process.env.REACT_APP_GOOGLE_CLIENT_ID || '413786747217-shtsu3g52852filvh897jc6si15grtkg.apps.googleusercontent.com')
+    }
   }
 });
