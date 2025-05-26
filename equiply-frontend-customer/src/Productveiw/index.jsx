@@ -27,7 +27,7 @@ const Review = ({ name, date, comment, rating }) => (
 );
 
 const ProductVeiw = () => {
-  const { id } = useParams();
+  const { productId } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -60,7 +60,7 @@ const ProductVeiw = () => {
     const fetchProductById = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/product/${id}`);
+        const response = await fetch(`http://localhost:3000/product/${productId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch product details');
@@ -97,7 +97,7 @@ const ProductVeiw = () => {
     // Fetch all reviews for this product
     const fetchAllReviews = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/review/product/${id}`);
+        const response = await fetch(`http://localhost:3000/review/product/${productId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch reviews');
@@ -112,11 +112,11 @@ const ProductVeiw = () => {
       }
     };
 
-    if (id) {
+    if (productId) {
       fetchProductById();
       fetchAllReviews();
     }
-  }, [id]);
+  }, [productId]);
 
   useEffect(() => {
     const checkWishlistStatus = async () => {
@@ -186,7 +186,7 @@ const ProductVeiw = () => {
           'x-access-token': token
         },
         body: JSON.stringify({
-          productId: id,
+          productId: productId,
           rating: newReview.rating,
           comment: newReview.comment
         })
@@ -202,7 +202,7 @@ const ProductVeiw = () => {
       setNewReview({ rating: 0, comment: '' });
       
       // Refetch reviews to include the new one
-      const updatedReviewsResponse = await fetch(`http://localhost:3000/review/product/${id}`);
+      const updatedReviewsResponse = await fetch(`http://localhost:3000/review/product/${productId}`);
       const updatedReviewsData = await updatedReviewsResponse.json();
       
       if (updatedReviewsData && updatedReviewsData.success) {
@@ -210,7 +210,7 @@ const ProductVeiw = () => {
       }
       
       // Refetch product to update review stats
-      const updatedProductResponse = await fetch(`http://localhost:3000/product/${id}`);
+      const updatedProductResponse = await fetch(`http://localhost:3000/product/${productId}`);
       const updatedProductData = await updatedProductResponse.json();
       
       if (updatedProductData && updatedProductData.success && updatedProductData.reviewStats) {
