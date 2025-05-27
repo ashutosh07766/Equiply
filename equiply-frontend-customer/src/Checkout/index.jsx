@@ -20,6 +20,11 @@ const Checkout = () => {
     phone: ""
   });
   const [addressError, setAddressError] = useState("");
+  const [addressValidation, setAddressValidation] = useState({
+    label: { isValid: true, message: "" },
+    address: { isValid: true, message: "" },
+    phone: { isValid: true, message: "" }
+  });
   const [orderSummary, setOrderSummary] = useState({
     items: [],
     subtotal: 0,
@@ -201,29 +206,109 @@ const Checkout = () => {
     }
   };
 
+  const validatePhone = (phone) => {
+    const phoneRegex = /^\+?[1-9]\d{9,14}$/; // International format
+    const indianPhoneRegex = /^[6-9]\d{9}$/; // Indian 10-digit format
+    const cleanPhone = phone.replace(/[\s+()-]/g, '');
+    
+    if (!cleanPhone) {
+      return { isValid: false, message: "Phone number is required" };
+    }
+    if (cleanPhone.length < 10) {
+      return { isValid: false, message: "Phone number must be at least 10 digits" };
+    }
+    if (!/^\d+$/.test(cleanPhone)) {
+      return { isValid: false, message: "Phone number can only contain digits" };
+    }
+    if (cleanPhone.length === 10 && !indianPhoneRegex.test(cleanPhone)) {
+      return { isValid: false, message: "Invalid Indian phone number format" };
+    }
+    if (cleanPhone.length > 15) {
+      return { isValid: false, message: "Phone number is too long" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validateAddress = (address) => {
+    if (!address.trim()) {
+      return { isValid: false, message: "Address is required" };
+    }
+    if (address.trim().length < 10) {
+      return { isValid: false, message: "Please provide a complete address" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validateLabel = (label) => {
+    if (!label.trim()) {
+      return { isValid: false, message: "Label is required" };
+    }
+    if (label.trim().length < 2) {
+      return { isValid: false, message: "Label must be at least 2 characters" };
+    }
+    if (!/^[a-zA-Z\s]+$/.test(label.trim())) {
+      return { isValid: false, message: "Label can only contain letters and spaces" };
+    }
+    return { isValid: true, message: "" };
+  };
+
   const handleAddressChange = (e) => {
-    setNewAddress({
-      ...newAddress,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    
+    // Allow only numbers for phone input
+    if (name === 'phone') {
+      const numbersOnly = value.replace(/\D/g, '');
+      setNewAddress({
+        ...newAddress,
+        [name]: numbersOnly
+      });
+      
+      // Real-time validation for phone
+      const validation = validatePhone(numbersOnly);
+      setAddressValidation(prev => ({
+        ...prev,
+        phone: validation
+      }));
+    } else {
+      setNewAddress({
+        ...newAddress,
+        [name]: value
+      });
+      
+      // Real-time validation for other fields
+      if (name === 'label') {
+        const validation = validateLabel(value);
+        setAddressValidation(prev => ({
+          ...prev,
+          label: validation
+        }));
+      } else if (name === 'address') {
+        const validation = validateAddress(value);
+        setAddressValidation(prev => ({
+          ...prev,
+          address: validation
+        }));
+      }
+    }
   };
 
   const handleAddAddress = async () => {
     setAddressError("");
     
-    // Validate the new address
-    if (!newAddress.label) {
-      setAddressError("Please provide a label for this address");
-      return;
-    }
+    // Validate all fields
+    const labelValidation = validateLabel(newAddress.label);
+    const addressValidation = validateAddress(newAddress.address);
+    const phoneValidation = validatePhone(newAddress.phone);
     
-    if (!newAddress.address) {
-      setAddressError("Please provide a complete address");
-      return;
-    }
+    setAddressValidation({
+      label: labelValidation,
+      address: addressValidation,
+      phone: phoneValidation
+    });
     
-    if (!newAddress.phone) {
-      setAddressError("Please provide a phone number");
+    // Check if all validations pass
+    if (!labelValidation.isValid || !addressValidation.isValid || !phoneValidation.isValid) {
+      setAddressError("Please fix the validation errors above");
       return;
     }
 
@@ -239,10 +324,10 @@ const Checkout = () => {
           'x-access-token': token
         },
         body: JSON.stringify({
-          label: newAddress.label,
+          label: newAddress.label.trim(),
           type: newAddress.type || 'Home',
-          address: newAddress.address,
-          phone: newAddress.phone
+          address: newAddress.address.trim(),
+          phone: newAddress.phone.trim()
         })
       });
       
@@ -261,6 +346,11 @@ const Checkout = () => {
         type: "Home",
         address: "",
         phone: ""
+      });
+      setAddressValidation({
+        label: { isValid: true, message: "" },
+        address: { isValid: true, message: "" },
+        phone: { isValid: true, message: "" }
       });
     } catch (error) {
       console.error("Error saving address:", error);
@@ -539,9 +629,15 @@ const Checkout = () => {
                   name="label"
                   value={newAddress.label}
                   onChange={handleAddressChange}
-                  placeholder="John Cena"
-                  className="w-full p-2 border rounded-md"
+                  placeholder="John Doe"
+                  className={`w-full p-2 border rounded-md ${
+                    !addressValidation.label.isValid ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  maxLength={50}
                 />
+                {!addressValidation.label.isValid && (
+                  <p className="text-red-500 text-sm mt-1">{addressValidation.label.message}</p>
+                )}
               </div>
               
               <div>
@@ -550,7 +646,7 @@ const Checkout = () => {
                   name="type"
                   value={newAddress.type}
                   onChange={handleAddressChange}
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md border-gray-300"
                 >
                   <option value="Home">Home</option>
                   <option value="Office">Office</option>
@@ -565,21 +661,34 @@ const Checkout = () => {
                   value={newAddress.address}
                   onChange={handleAddressChange}
                   placeholder="Street, City, State, ZIP Code"
-                  className="w-full p-2 border rounded-md"
+                  className={`w-full p-2 border rounded-md ${
+                    !addressValidation.address.isValid ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   rows={3}
+                  maxLength={200}
                 ></textarea>
+                {!addressValidation.address.isValid && (
+                  <p className="text-red-500 text-sm mt-1">{addressValidation.address.message}</p>
+                )}
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Contact Phone</label>
                 <input
-                  type="text"
+                  type="tel"
                   name="phone"
                   value={newAddress.phone}
                   onChange={handleAddressChange}
-                  placeholder="+91 9876543210"
-                  className="w-full p-2 border rounded-md"
+                  placeholder="9876543210"
+                  className={`w-full p-2 border rounded-md ${
+                    !addressValidation.phone.isValid ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  maxLength={15}
                 />
+                {!addressValidation.phone.isValid && (
+                  <p className="text-red-500 text-sm mt-1">{addressValidation.phone.message}</p>
+                )}
+                <p className="text-gray-500 text-xs mt-1">Enter 10-digit mobile number</p>
               </div>
             </div>
             

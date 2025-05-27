@@ -21,6 +21,53 @@ const Profile = () => {
     address: '',
     phone: ''
   });
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const validatePhone = (phone) => {
+    if (!phone) return { isValid: false, message: "Phone number is required" };
+    const phoneRegex = /^[6-9]\d{9}$/;
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      return { isValid: false, message: "Phone number must be exactly 10 digits" };
+    }
+    if (!phoneRegex.test(cleanPhone)) {
+      return { isValid: false, message: "Invalid phone number format" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validateName = (name) => {
+    if (!name.trim()) {
+      return { isValid: false, message: "Name is required" };
+    }
+    if (name.trim().length < 2) {
+      return { isValid: false, message: "Name must be at least 2 characters" };
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      return { isValid: false, message: "Name can only contain letters and spaces" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validateAddress = (address) => {
+    if (!address.trim()) {
+      return { isValid: false, message: "Address is required" };
+    }
+    if (address.trim().length < 10) {
+      return { isValid: false, message: "Please provide a complete address" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validateLabel = (label) => {
+    if (!label.trim()) {
+      return { isValid: false, message: "Label is required" };
+    }
+    if (label.trim().length < 2) {
+      return { isValid: false, message: "Label must be at least 2 characters" };
+    }
+    return { isValid: true, message: "" };
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -67,7 +114,56 @@ const Profile = () => {
     setIsEditing(false);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'phone') {
+      // Allow only numbers for phone
+      const numbersOnly = value.replace(/\D/g, '').slice(0, 10);
+      setEditedData(prev => ({
+        ...prev,
+        [name]: numbersOnly
+      }));
+      
+      // Real-time validation
+      const validation = validatePhone(numbersOnly);
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: validation.isValid ? '' : validation.message
+      }));
+    } else if (name === 'name') {
+      setEditedData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      const validation = validateName(value);
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: validation.isValid ? '' : validation.message
+      }));
+    } else {
+      setEditedData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
   const handleSave = async () => {
+    // Validate before saving
+    const nameValidation = validateName(editedData.name || '');
+    const phoneValidation = validatePhone(editedData.phone || '');
+    
+    const errors = {};
+    if (!nameValidation.isValid) errors.name = nameValidation.message;
+    if (!phoneValidation.isValid) errors.phone = phoneValidation.message;
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.put('http://localhost:3000/api/profile', editedData, {
@@ -76,24 +172,32 @@ const Profile = () => {
       
       setUserData(response.data.user);
       setIsEditing(false);
+      setValidationErrors({});
     } catch (error) {
       console.error('Error updating profile:', error);
       setError('Failed to update profile');
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleAddAddress = async () => {
+    // Validate address fields
+    const labelValidation = validateLabel(newAddress.label);
+    const addressValidation = validateAddress(newAddress.address);
+    const phoneValidation = validatePhone(newAddress.phone);
+    
+    if (!labelValidation.isValid || !addressValidation.isValid || !phoneValidation.isValid) {
+      setError(`Validation error: ${labelValidation.message || addressValidation.message || phoneValidation.message}`);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.post('http://localhost:3000/api/profile/address', newAddress, {
+      const response = await axios.post('http://localhost:3000/api/profile/address', {
+        ...newAddress,
+        label: newAddress.label.trim(),
+        address: newAddress.address.trim(),
+        phone: newAddress.phone.trim()
+      }, {
         headers: { 'x-access-token': token }
       });
       
@@ -152,18 +256,37 @@ const Profile = () => {
 
   const handleAddressInputChange = (e) => {
     const { name, value } = e.target;
-    if (editingAddressId) {
-      setUserData(prev => ({
-        ...prev,
-        addresses: prev.addresses.map(addr =>
-          addr._id === editingAddressId ? { ...addr, [name]: value } : addr
-        )
-      }));
+    
+    if (name === 'phone') {
+      // Allow only numbers for phone
+      const numbersOnly = value.replace(/\D/g, '').slice(0, 10);
+      if (editingAddressId) {
+        setUserData(prev => ({
+          ...prev,
+          addresses: prev.addresses.map(addr =>
+            addr._id === editingAddressId ? { ...addr, [name]: numbersOnly } : addr
+          )
+        }));
+      } else {
+        setNewAddress(prev => ({
+          ...prev,
+          [name]: numbersOnly
+        }));
+      }
     } else {
-      setNewAddress(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      if (editingAddressId) {
+        setUserData(prev => ({
+          ...prev,
+          addresses: prev.addresses.map(addr =>
+            addr._id === editingAddressId ? { ...addr, [name]: value } : addr
+          )
+        }));
+      } else {
+        setNewAddress(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
     }
   };
 
@@ -260,10 +383,16 @@ const Profile = () => {
                         name="name"
                         value={editedData.name || ''}
                         onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                          validationErrors.name ? 'border-red-500' : ''
+                        }`}
+                        maxLength={50}
                       />
                     ) : (
                       <p className="mt-1">{userData.name || 'Not provided'}</p>
+                    )}
+                    {validationErrors.name && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
                     )}
                   </div>
                 </div>
@@ -286,10 +415,17 @@ const Profile = () => {
                         name="phone"
                         value={editedData.phone || ''}
                         onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                          validationErrors.phone ? 'border-red-500' : ''
+                        }`}
+                        placeholder="9876543210"
+                        maxLength={10}
                       />
                     ) : (
                       <p className="mt-1">{userData.phone || 'Not provided'}</p>
+                    )}
+                    {validationErrors.phone && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.phone}</p>
                     )}
                   </div>
                 </div>
@@ -360,8 +496,10 @@ const Profile = () => {
                         value={newAddress.phone}
                         onChange={handleAddressInputChange}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Enter phone number"
+                        placeholder="9876543210"
+                        maxLength={10}
                       />
+                      <p className="text-gray-500 text-xs mt-1">Enter 10-digit mobile number</p>
                     </div>
                     <div className="flex justify-end space-x-2">
                       <button

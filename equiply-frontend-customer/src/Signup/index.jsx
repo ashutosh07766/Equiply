@@ -13,19 +13,120 @@ const Signup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [fieldValidation, setFieldValidation] = useState({
+    profileName: { isValid: true, message: "" },
+    email: { isValid: true, message: "" },
+    password: { isValid: true, message: "" },
+    phone: { isValid: true, message: "" }
+  });
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      return { isValid: false, message: "Email is required" };
+    }
+    if (!emailRegex.test(email)) {
+      return { isValid: false, message: "Please enter a valid email address" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return { isValid: false, message: "Password is required" };
+    }
+    if (password.length < 8) {
+      return { isValid: false, message: "Password must be at least 8 characters" };
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return { isValid: false, message: "Password must contain at least one lowercase letter" };
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return { isValid: false, message: "Password must contain at least one uppercase letter" };
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return { isValid: false, message: "Password must contain at least one number" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validateName = (name) => {
+    if (!name.trim()) {
+      return { isValid: false, message: "Name is required" };
+    }
+    if (name.trim().length < 2) {
+      return { isValid: false, message: "Name must be at least 2 characters" };
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      return { isValid: false, message: "Name can only contain letters and spaces" };
+    }
+    return { isValid: true, message: "" };
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone) {
+      return { isValid: true, message: "" }; // Phone is optional in signup
+    }
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!/^\d+$/.test(phone)) {
+      return { isValid: false, message: "Phone number can only contain digits" };
+    }
+    if (phone.length !== 10) {
+      return { isValid: false, message: "Phone number must be exactly 10 digits" };
+    }
+    if (!phoneRegex.test(phone)) {
+      return { isValid: false, message: "Invalid phone number format" };
+    }
+    return { isValid: true, message: "" };
+  };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // For phone, allow only numbers
+    if (name === 'phone') {
+      const numbersOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData({ ...formData, [name]: numbersOnly });
+      
+      // Real-time validation
+      const validation = validatePhone(numbersOnly);
+      setFieldValidation(prev => ({
+        ...prev,
+        [name]: validation
+      }));
+    } else {
+      setFormData({ ...formData, [name]: value });
+      
+      // Real-time validation
+      let validation = { isValid: true, message: "" };
+      switch (name) {
+        case 'profileName':
+          validation = validateName(value);
+          break;
+        case 'email':
+          validation = validateEmail(value);
+          break;
+        case 'password':
+          validation = validatePassword(value);
+          break;
+      }
+      
+      setFieldValidation(prev => ({
+        ...prev,
+        [name]: validation
+      }));
+    }
   };
 
   useEffect(() => {
     // Check if form is valid whenever formData changes
-    const { profileName, email, password, phone } = formData;
-    const isValid = 
-      profileName.trim() !== "" && 
-      email.trim() !== "" && 
-      password.length >= 8;
+    const { profileName, email, password } = formData;
+    const nameValid = validateName(profileName).isValid;
+    const emailValid = validateEmail(email).isValid;
+    const passwordValid = validatePassword(password).isValid;
+    const phoneValid = validatePhone(formData.phone || '').isValid;
     
+    const isValid = nameValid && emailValid && passwordValid && phoneValid;
     setIsFormValid(isValid);
   }, [formData]);
 
@@ -100,9 +201,15 @@ const Signup = () => {
               placeholder="Enter your profile name"
               value={formData.profileName}
               onChange={handleChange}
-              className="w-full px-4 py-4 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className={`w-full px-4 py-4 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                !fieldValidation.profileName.isValid ? 'border-red-500' : 'border-gray-300'
+              }`}
               required
+              maxLength={50}
             />
+            {!fieldValidation.profileName.isValid && (
+              <p className="text-red-500 text-sm mt-1">{fieldValidation.profileName.message}</p>
+            )}
           </div>
 
           <div>
@@ -115,9 +222,37 @@ const Signup = () => {
               placeholder="Enter your email address"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-4 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className={`w-full px-4 py-4 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                !fieldValidation.email.isValid ? 'border-red-500' : 'border-gray-300'
+              }`}
               required
             />
+            {!fieldValidation.email.isValid && (
+              <p className="text-red-500 text-sm mt-1">{fieldValidation.email.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm text-gray-600">
+              Phone Number (Optional)
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              placeholder="9876543210"
+              value={formData.phone || ''}
+              onChange={handleChange}
+              className={`w-full px-4 py-4 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                !fieldValidation.phone.isValid ? 'border-red-500' : 'border-gray-300'
+              }`}
+              maxLength={10}
+            />
+            {!fieldValidation.phone.isValid && (
+              <p className="text-red-500 text-sm mt-1">{fieldValidation.phone.message}</p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Enter your 10-digit mobile number
+            </p>
           </div>
 
           <div>
@@ -131,7 +266,9 @@ const Signup = () => {
                 placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm pr-16 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-xl text-sm pr-16 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                  !fieldValidation.password.isValid ? 'border-red-500' : 'border-gray-300'
+                }`}
                 required
               />
               <button
@@ -142,18 +279,21 @@ const Signup = () => {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            {!fieldValidation.password.isValid && (
+              <p className="text-red-500 text-sm mt-1">{fieldValidation.password.message}</p>
+            )}
             <p className="text-xs text-gray-500 mt-1">
-              Use 8 or more characters with a mix of letters, numbers & symbols
+              Use 8+ characters with uppercase, lowercase, numbers
             </p>
           </div>
 
           <p className="text-xs text-gray-600">
             By creating an account, you agree to the{" "}
-            <a href="#" className="text-blue-600 underline">
+            <a href="/terms" className="text-blue-600 underline">
               Terms of use
             </a>{" "}
             and{" "}
-            <a href="#" className="text-blue-600 underline">
+            <a href="/privacy" className="text-blue-600 underline">
               Privacy Policy
             </a>
             .

@@ -10,19 +10,94 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return { isValid: false, message: "Email is required" };
+    if (!emailRegex.test(email)) return { isValid: false, message: "Please enter a valid email address" };
+    return { isValid: true, message: "" };
+  };
+
+  const validateName = (name) => {
+    if (!name.trim()) return { isValid: false, message: "Name is required" };
+    if (name.trim().length < 2) return { isValid: false, message: "Name must be at least 2 characters" };
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) return { isValid: false, message: "Name can only contain letters and spaces" };
+    return { isValid: true, message: "" };
+  };
+
+  const validateSubject = (subject) => {
+    if (!subject.trim()) return { isValid: false, message: "Subject is required" };
+    if (subject.trim().length < 5) return { isValid: false, message: "Subject must be at least 5 characters" };
+    return { isValid: true, message: "" };
+  };
+
+  const validateMessage = (message) => {
+    if (!message.trim()) return { isValid: false, message: "Message is required" };
+    if (message.trim().length < 10) return { isValid: false, message: "Message must be at least 10 characters" };
+    return { isValid: true, message: "" };
+  };
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+
+    // Real-time validation
+    let validation = { isValid: true, message: "" };
+    switch (name) {
+      case 'name':
+        validation = validateName(value);
+        break;
+      case 'email':
+        validation = validateEmail(value);
+        break;
+      case 'subject':
+        validation = validateSubject(value);
+        break;
+      case 'message':
+        validation = validateMessage(value);
+        break;
+    }
+
+    setValidationErrors(prev => ({
+      ...prev,
+      [name]: validation.isValid ? '' : validation.message
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission here
-    alert('Thank you for your message! We\'ll get back to you soon.');
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    
+    // Validate all fields
+    const nameValidation = validateName(formData.name);
+    const emailValidation = validateEmail(formData.email);
+    const subjectValidation = validateSubject(formData.subject);
+    const messageValidation = validateMessage(formData.message);
+    
+    const errors = {};
+    if (!nameValidation.isValid) errors.name = nameValidation.message;
+    if (!emailValidation.isValid) errors.email = emailValidation.message;
+    if (!subjectValidation.isValid) errors.subject = subjectValidation.message;
+    if (!messageValidation.isValid) errors.message = messageValidation.message;
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    // Simulate form submission
+    setTimeout(() => {
+      alert('Thank you for your message! We\'ll get back to you soon.');
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setValidationErrors({});
+      setIsSubmitting(false);
+    }, 1000);
   };
 
   return (
@@ -96,9 +171,15 @@ const Contact = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      validationErrors.name ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="Your full name"
+                    maxLength={50}
                   />
+                  {validationErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
+                  )}
                 </div>
 
                 <div>
@@ -109,9 +190,14 @@ const Contact = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      validationErrors.email ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="your.email@example.com"
                   />
+                  {validationErrors.email && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
+                  )}
                 </div>
 
                 <div>
@@ -122,9 +208,15 @@ const Contact = () => {
                     value={formData.subject}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      validationErrors.subject ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="What is this regarding?"
+                    maxLength={100}
                   />
+                  {validationErrors.subject && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.subject}</p>
+                  )}
                 </div>
 
                 <div>
@@ -135,16 +227,24 @@ const Contact = () => {
                     onChange={handleInputChange}
                     required
                     rows={5}
-                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      validationErrors.message ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="Tell us how we can help you..."
+                    maxLength={500}
                   ></textarea>
+                  {validationErrors.message && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.message}</p>
+                  )}
+                  <p className="text-gray-500 text-xs mt-1">{formData.message.length}/500 characters</p>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-black text-white py-3 rounded-lg hover:opacity-90 transition-opacity"
+                  disabled={isSubmitting}
+                  className="w-full bg-black text-white py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  Send Message
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </button>
               </form>
             </div>
