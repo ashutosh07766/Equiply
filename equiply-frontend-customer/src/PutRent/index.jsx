@@ -36,8 +36,11 @@ const PutRent = () => {
   const navigate = useNavigate();
 
   const categories = [
+    "Mobile",
+    "Electronics", 
+    "House Appliances",
+    "Accessories",
     "Tools",
-    "Electronics",
     "Music",
     "Transport",
     "Gaming",

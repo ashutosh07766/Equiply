@@ -180,7 +180,7 @@ const Product = () => {
       <div className="flex flex-col lg:flex-row p-6 gap-6 flex-grow">
         <aside className="w-full lg:w-1/5 space-y-4">
           <h2 className="font-semibold text-lg">Filter by Category</h2>
-          {["Mobile", "Electronics", "House Appliances", "Accessories"].map((cat) => (
+          {["Mobile", "Electronics", "House Appliances", "Accessories", "Tools", "Music", "Transport", "Gaming", "Books", "Costume", "Other"].map((cat) => (
             <label key={cat} className="block text-sm">
               <input
                 type="checkbox"

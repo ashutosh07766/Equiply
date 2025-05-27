@@ -31,12 +31,12 @@ const Footer = () => {
         <div>
           <h3 className="text-md font-semibold mb-4">Categories</h3>
           <ul className="space-y-2 text-sm text-gray-300">
-            <li><a href="/product?category=cameras" className="hover:text-white">Cameras & Photography</a></li>
-            <li><a href="/product?category=tools" className="hover:text-white">Power Tools</a></li>
-            <li><a href="/product?category=electronics" className="hover:text-white">Electronics</a></li>
-            <li><a href="/product?category=sports" className="hover:text-white">Sports Equipment</a></li>
-            <li><a href="/product?category=automotive" className="hover:text-white">Automotive Tools</a></li>
-            <li><a href="/product?category=home" className="hover:text-white">Home & Garden</a></li>
+            <li><a href="/product?category=Mobile" className="hover:text-white">Mobile</a></li>
+            <li><a href="/product?category=Electronics" className="hover:text-white">Electronics</a></li>
+            <li><a href="/product?category=House Appliances" className="hover:text-white">House Appliances</a></li>
+            <li><a href="/product?category=Accessories" className="hover:text-white">Accessories</a></li>
+            <li><a href="/product?category=Tools" className="hover:text-white">Tools</a></li>
+            <li><a href="/product?category=Music" className="hover:text-white">Music Equipment</a></li>
           </ul>
         </div>
 
