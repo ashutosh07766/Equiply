@@ -1,7 +1,15 @@
 import React from 'react'
 import { FaTwitter, FaFacebook, FaInstagram, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
 
 const Footer = () => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (category) => {
+    // Navigate to product page with category filter
+    navigate(`/product?category=${encodeURIComponent(category)}`);
+  };
+
   return (
     <footer className="bg-[#1E3A8A] text-white px-8 py-10">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -31,12 +39,54 @@ const Footer = () => {
         <div>
           <h3 className="text-md font-semibold mb-4">Categories</h3>
           <ul className="space-y-2 text-sm text-gray-300">
-            <li><a href="/product?category=Mobile" className="hover:text-white">Mobile</a></li>
-            <li><a href="/product?category=Electronics" className="hover:text-white">Electronics</a></li>
-            <li><a href="/product?category=House Appliances" className="hover:text-white">House Appliances</a></li>
-            <li><a href="/product?category=Accessories" className="hover:text-white">Accessories</a></li>
-            <li><a href="/product?category=Tools" className="hover:text-white">Tools</a></li>
-            <li><a href="/product?category=Music" className="hover:text-white">Music Equipment</a></li>
+            <li>
+              <button 
+                onClick={() => handleCategoryClick('Mobile')}
+                className="hover:text-white text-left w-full"
+              >
+                Mobile
+              </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => handleCategoryClick('Electronics')}
+                className="hover:text-white text-left w-full"
+              >
+                Electronics
+              </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => handleCategoryClick('House Appliances')}
+                className="hover:text-white text-left w-full"
+              >
+                House Appliances
+              </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => handleCategoryClick('Accessories')}
+                className="hover:text-white text-left w-full"
+              >
+                Accessories
+              </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => handleCategoryClick('Tools')}
+                className="hover:text-white text-left w-full"
+              >
+                Tools
+              </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => handleCategoryClick('Music')}
+                className="hover:text-white text-left w-full"
+              >
+                Music Equipment
+              </button>
+            </li>
           </ul>
         </div>
 

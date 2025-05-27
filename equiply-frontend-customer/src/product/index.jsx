@@ -69,6 +69,7 @@ const Product = () => {
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const searchTerm = params.get("search") || "";
+  const categoryParam = params.get("category") || "";
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,13 @@ const Product = () => {
     const token = localStorage.getItem('authToken');
     setIsLoggedIn(!!token);
   }, []);
+
+  useEffect(() => {
+    // Set initial category filter from URL parameter
+    if (categoryParam) {
+      setSelectedCategories([categoryParam]);
+    }
+  }, [categoryParam]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -101,9 +109,22 @@ const Product = () => {
   }, []);
 
   const handleCategoryChange = (category) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
+    const newCategories = selectedCategories.includes(category) 
+      ? selectedCategories.filter((c) => c !== category) 
+      : [...selectedCategories, category];
+    
+    setSelectedCategories(newCategories);
+    
+    // Update URL to reflect current filters
+    const newParams = new URLSearchParams(location.search);
+    if (newCategories.length > 0) {
+      newParams.set('category', newCategories.join(','));
+    } else {
+      newParams.delete('category');
+    }
+    
+    const newUrl = `${location.pathname}?${newParams.toString()}`;
+    window.history.pushState({}, '', newUrl);
   };
 
   const handleWishlistClick = async (e, productId) => {
@@ -191,15 +212,59 @@ const Product = () => {
               {cat}
             </label>
           ))}
+          
+          {/* Clear filters button */}
+          {selectedCategories.length > 0 && (
+            <button
+              onClick={() => {
+                setSelectedCategories([]);
+                const newParams = new URLSearchParams(location.search);
+                newParams.delete('category');
+                const newUrl = `${location.pathname}?${newParams.toString()}`;
+                window.history.pushState({}, '', newUrl);
+              }}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Clear filters
+            </button>
+          )}
         </aside>
 
         <main className="flex-1">
+          {/* Show active filters */}
+          {selectedCategories.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">Active filters:</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedCategories.map((category) => (
+                  <span
+                    key={category}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                  >
+                    {category}
+                    <button
+                      onClick={() => handleCategoryChange(category)}
+                      className="ml-2 hover:text-blue-600"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="text-center py-20 text-lg font-medium">Loading products...</div>
           ) : error ? (
             <div className="text-center py-20 text-lg font-medium text-red-600">{error}</div>
           ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-20 text-lg font-medium">No products found.</div>
+            <div className="text-center py-20 text-lg font-medium">
+              {selectedCategories.length > 0 
+                ? `No products found in ${selectedCategories.join(', ')} category.`
+                : "No products found."
+              }
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {filteredProducts.map((product) => {
