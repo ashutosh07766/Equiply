@@ -60,7 +60,7 @@ const ProductVeiw = () => {
     const fetchProductById = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://equiply-jrej.onrender.com/product/${productId}`);
+        const response = await fetch(`http://localhost:3000/product/${productId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch product details');
@@ -97,7 +97,7 @@ const ProductVeiw = () => {
     // Fetch all reviews for this product
     const fetchAllReviews = async () => {
       try {
-        const response = await fetch(`https://equiply-jrej.onrender.com/review/product/${productId}`);
+        const response = await fetch(`http://localhost:3000/review/product/${productId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch reviews');
@@ -128,7 +128,7 @@ const ProductVeiw = () => {
       
       try {
         console.log('Checking wishlist with token:', token);
-        const response = await axios.get('https://equiply-jrej.onrender.com/wishlist', {
+        const response = await axios.get('http://localhost:3000/wishlist', {
           headers: { 
             'x-access-token': token
           }
@@ -179,7 +179,7 @@ const ProductVeiw = () => {
       setReviewError(null);
       
       const token = localStorage.getItem('authToken');
-      const response = await fetch('https://equiply-jrej.onrender.com/review', {
+      const response = await fetch('http://localhost:3000/review', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ const ProductVeiw = () => {
       setNewReview({ rating: 0, comment: '' });
       
       // Refetch reviews to include the new one
-      const updatedReviewsResponse = await fetch(`https://equiply-jrej.onrender.com/review/product/${productId}`);
+      const updatedReviewsResponse = await fetch(`http://localhost:3000/review/product/${productId}`);
       const updatedReviewsData = await updatedReviewsResponse.json();
       
       if (updatedReviewsData && updatedReviewsData.success) {
@@ -210,7 +210,7 @@ const ProductVeiw = () => {
       }
       
       // Refetch product to update review stats
-      const updatedProductResponse = await fetch(`https://equiply-jrej.onrender.com/product/${productId}`);
+      const updatedProductResponse = await fetch(`http://localhost:3000/product/${productId}`);
       const updatedProductData = await updatedProductResponse.json();
       
       if (updatedProductData && updatedProductData.success && updatedProductData.reviewStats) {
@@ -276,13 +276,13 @@ const ProductVeiw = () => {
 
     try {
       if (isInWishlist) {
-        await axios.delete(`https://equiply-jrej.onrender.com/wishlist/remove/${product._id}`, {
+        await axios.delete(`http://localhost:3000/wishlist/remove/${product._id}`, {
           headers: { 'x-access-token': token }
         });
         setIsInWishlist(false);
         setWishlistCount(prev => prev - 1);
       } else {
-        await axios.post('https://equiply-jrej.onrender.com/wishlist/add', 
+        await axios.post('http://localhost:3000/wishlist/add', 
           { productId: product._id },
           { headers: { 'x-access-token': token } }
         );

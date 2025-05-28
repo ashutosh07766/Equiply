@@ -13,7 +13,7 @@ const Homepage = () => {
     const fetchProducts = async () => {
       try {
         // Get featured products from the public endpoint
-        const featuredResponse = await fetch("https://equiply-jrej.onrender.com/product/featured");
+        const featuredResponse = await fetch("http://localhost:3000/product/featured");
         const featuredData = await featuredResponse.json();
         
         if (featuredData.success && featuredData.featuredProducts) {
@@ -21,7 +21,7 @@ const Homepage = () => {
         }
         
         // Get all products for the "Most Popular" section
-        const response = await fetch("https://equiply-jrej.onrender.com/product");
+        const response = await fetch("http://localhost:3000/product");
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }

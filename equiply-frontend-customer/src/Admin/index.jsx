@@ -18,7 +18,7 @@ const AdminLogin = ({ onLogin }) => {
     
     try {
       // Use regular axios for login since we're not authenticated yet
-      const response = await axios.post('https://equiply-jrej.onrender.com/user/signin', {
+      const response = await axios.post('http://localhost:3000/user/signin', {
         email,
         password
       });
@@ -112,7 +112,7 @@ const DashboardStats = () => {
           return;
         }
 
-        const response = await axios.get('https://equiply-jrej.onrender.com/admin/dashboard', {
+        const response = await axios.get('http://localhost:3000/admin/dashboard', {
           headers: {
             'x-access-token': token
           }

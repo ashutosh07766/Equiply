@@ -44,7 +44,7 @@ const OAuthCallback = () => {
 
         setStatus('Almost there...');
 
-        const serverResponse = await fetch('https://equiply-jrej.onrender.com/oauth/google', {
+        const serverResponse = await fetch('http://localhost:3000/oauth/google', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

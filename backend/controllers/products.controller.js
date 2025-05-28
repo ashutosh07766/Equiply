@@ -143,9 +143,72 @@ const getFeaturedProducts = async (req, res) => {
     }
 };
 
+let searchProducts = async (req, res) => {
+    try {
+        console.log('Search query parameters:', req.query);
+        const { search, category, page = 1, limit = 10 } = req.query;
+        let query = {};
+
+        // Add search condition if search term exists
+        if (search && search.trim()) {
+            query.name = { $regex: search.trim(), $options: 'i' }; // Case-insensitive search
+        }
+
+        // Add category filter if category exists
+        if (category && category.trim()) {
+            // Handle multiple categories if they're comma-separated
+            const categories = category.split(',').map(cat => cat.trim());
+            // Use $in operator to match any of the selected categories
+            query.category = { $in: categories };
+            console.log('Category filter:', categories);
+        }
+
+        // Calculate skip value for pagination
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        console.log('MongoDB query:', query);
+        console.log('Pagination params:', { skip, limit: parseInt(limit) });
+        
+        // Get total count of matching products
+        const totalProducts = await productModel.countDocuments(query);
+        
+        // Get paginated products
+        const products = await productModel.find(query)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .sort({ createdAt: -1 }); // Sort by newest first
+            
+        console.log('Found products:', products.length);
+        console.log('Total products:', totalProducts);
+
+        const totalPages = Math.ceil(totalProducts / parseInt(limit));
+        console.log('Total pages:', totalPages);
+
+        // Always return success with empty array if no products found
+        return res.status(200).json({
+            success: true,
+            products: products || [],
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: totalPages || 1,
+                totalProducts: totalProducts,
+                productsPerPage: parseInt(limit)
+            }
+        });
+    } catch (error) {
+        console.error('Error in searchProducts:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while searching products",
+            error: error.message
+        });
+    }
+};
+
 module.exports={
     getAllProducts,
     product,
     createProduct,
-    getFeaturedProducts
+    getFeaturedProducts,
+    searchProducts
 }

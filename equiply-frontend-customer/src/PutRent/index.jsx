@@ -134,7 +134,7 @@ const PutRent = () => {
         const formData = new FormData();
         formData.append('image', file);
 
-        const response = await fetch('https://equiply-jrej.onrender.com/upload/image', {
+        const response = await fetch('http://localhost:3000/upload/image', {
           method: 'POST',
           body: formData,
         });
@@ -220,7 +220,7 @@ const PutRent = () => {
         availability: `${availability.duration} ${availability.period}` // Format: "2 weeks", "3 months", etc.
       };
 
-      const response = await fetch('https://equiply-jrej.onrender.com/product', {
+      const response = await fetch('http://localhost:3000/product', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

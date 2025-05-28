@@ -84,7 +84,7 @@ const Checkout = () => {
   const fetchUserAddresses = async (token) => {
     try {
       setLoading(true);
-      const response = await fetch('https://equiply-jrej.onrender.com/user/addresses', {
+      const response = await fetch('http://localhost:3000/user/addresses', {
         headers: {
           'x-access-token': token
         }
@@ -144,7 +144,7 @@ const Checkout = () => {
       
       // Save the selected address as the user's default address
       try {
-        await fetch('https://equiply-jrej.onrender.com/user/default-address', {
+        await fetch('http://localhost:3000/user/default-address', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -158,7 +158,7 @@ const Checkout = () => {
       }
       
       // Create order in backend
-      const response = await fetch('https://equiply-jrej.onrender.com/checkout', {
+      const response = await fetch('http://localhost:3000/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -317,7 +317,7 @@ const Checkout = () => {
       
       // Save address to backend
       const token = localStorage.getItem('authToken');
-      const response = await fetch('https://equiply-jrej.onrender.com/user/address', {
+      const response = await fetch('http://localhost:3000/user/address', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -365,7 +365,7 @@ const Checkout = () => {
       setLoading(true);
       
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`https://equiply-jrej.onrender.com/user/address/${id}`, {
+      const response = await fetch(`http://localhost:3000/user/address/${id}`, {
         method: 'DELETE',
         headers: {
           'x-access-token': token
@@ -409,7 +409,7 @@ const Checkout = () => {
       setLoading(true);
       
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`https://equiply-jrej.onrender.com/user/address/${newAddress.editingId}`, {
+      const response = await fetch(`http://localhost:3000/user/address/${newAddress.editingId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

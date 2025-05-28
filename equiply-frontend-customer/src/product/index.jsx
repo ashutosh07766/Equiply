@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../header";
 import Footer from "../Footer";
@@ -18,7 +18,7 @@ export const WishlistProvider = ({ children }) => {
     if (!token) return;
     
     try {
-      const response = await axios.get('https://equiply-jrej.onrender.com/wishlist', {
+      const response = await axios.get('http://localhost:3000/wishlist', {
         headers: { 'x-access-token': token }
       });
       console.log('Wishlist API Response:', response.data);
@@ -70,6 +70,7 @@ const Product = () => {
   const params = new URLSearchParams(location.search);
   const searchTerm = params.get("search") || "";
   const categoryParam = params.get("category") || "";
+  const currentPage = parseInt(params.get("page")) || 1;
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,36 +78,109 @@ const Product = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalProducts: 0,
+    productsPerPage: 10
+  });
   
   const { wishlistItems, updateWishlist } = useContext(WishlistContext);
+
+  // Debounced fetch function
+  const debouncedFetch = useCallback(
+    (search, categories, page) => {
+      const timeoutId = setTimeout(async () => {
+        try {
+          setLoading(true);
+          setError(null); // Clear any previous errors
+          const searchParams = new URLSearchParams();
+          
+          // Add search term if it exists
+          if (search && search.trim()) {
+            searchParams.append('search', search.trim());
+          }
+          
+          // Add categories if they exist
+          if (categories && categories.length > 0) {
+            searchParams.append('category', categories.join(','));
+          }
+          
+          // Add pagination parameters
+          searchParams.append('page', page);
+          searchParams.append('limit', 10);
+
+          const url = `http://localhost:3000/product/search?${searchParams.toString()}`;
+          console.log('Fetching products with filters:', {
+            search: search?.trim(),
+            categories,
+            page,
+            url
+          });
+          
+          const response = await fetch(url);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to load products');
+          }
+          
+          const data = await response.json();
+          console.log('Received products data:', data);
+          
+          if (!data.success) {
+            throw new Error(data.message || 'Failed to load products');
+          }
+          
+          setProducts(data.products || []);
+          setPagination(data.pagination || {
+            currentPage: 1,
+            totalPages: 1,
+            totalProducts: 0,
+            productsPerPage: 10
+          });
+          setLoading(false);
+        } catch (err) {
+          console.error('Error fetching products:', err);
+          setError(err.message || "Failed to load products");
+          setProducts([]); // Clear products on error
+          setLoading(false);
+        }
+      }, 300); // 300ms delay
+
+      return () => clearTimeout(timeoutId);
+    },
+    []
+  );
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     setIsLoggedIn(!!token);
   }, []);
 
+  // Effect to handle URL parameters
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get("search") || "";
+    const categoryParam = params.get("category") || "";
+    const pageParam = parseInt(params.get("page")) || 1;
+
     // Set initial category filter from URL parameter
     if (categoryParam) {
-      setSelectedCategories([categoryParam]);
+      setSelectedCategories(categoryParam.split(',').map(cat => cat.trim()));
+    } else {
+      setSelectedCategories([]); // Clear categories if no category param
     }
-  }, [categoryParam]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("https://equiply-jrej.onrender.com/product");
-        const data = await response.json();
-        setProducts(Array.isArray(data) ? data : data.products || data.data || data.items || []);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to load products");
-        setLoading(false);
-      }
-    };
+    // Fetch products with current parameters
+    debouncedFetch(searchParam, categoryParam ? categoryParam.split(',').map(cat => cat.trim()) : [], pageParam);
+  }, [location.search, debouncedFetch]);
 
-    fetchProducts();
-  }, []);
+  const handlePageChange = (newPage) => {
+    const newParams = new URLSearchParams(location.search);
+    newParams.set('page', newPage);
+    const newUrl = `${location.pathname}?${newParams.toString()}`;
+    navigate(newUrl);
+  };
 
   const handleCategoryChange = (category) => {
     const newCategories = selectedCategories.includes(category) 
@@ -115,16 +189,26 @@ const Product = () => {
     
     setSelectedCategories(newCategories);
     
-    // Update URL to reflect current filters
+    // Update URL to reflect current filters and reset to page 1
     const newParams = new URLSearchParams(location.search);
     if (newCategories.length > 0) {
       newParams.set('category', newCategories.join(','));
     } else {
       newParams.delete('category');
     }
+    newParams.set('page', '1'); // Reset to first page when changing categories
     
     const newUrl = `${location.pathname}?${newParams.toString()}`;
-    window.history.pushState({}, '', newUrl);
+    navigate(newUrl);
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSelectedCategories([]);
+    const newParams = new URLSearchParams();
+    newParams.set('page', '1');
+    const newUrl = `${location.pathname}?${newParams.toString()}`;
+    navigate(newUrl);
   };
 
   const handleWishlistClick = async (e, productId) => {
@@ -146,7 +230,7 @@ const Product = () => {
       );
       
       if (isInWishlist) {
-        await axios.delete(`https://equiply-jrej.onrender.com/wishlist/remove/${productId}`, {
+        await axios.delete(`http://localhost:3000/wishlist/remove/${productId}`, {
           headers: { 'x-access-token': token }
         });
         setToast({
@@ -155,7 +239,7 @@ const Product = () => {
           type: 'success'
         });
       } else {
-        await axios.post('https://equiply-jrej.onrender.com/wishlist/add', 
+        await axios.post('http://localhost:3000/wishlist/add', 
           { productId },
           { headers: { 'x-access-token': token } }
         );
@@ -179,13 +263,6 @@ const Product = () => {
       }
     }
   };
-
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategories.length === 0 || selectedCategories.includes(product.category);
-    return matchesSearch && matchesCategory;
-  });
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -216,13 +293,7 @@ const Product = () => {
           {/* Clear filters button */}
           {selectedCategories.length > 0 && (
             <button
-              onClick={() => {
-                setSelectedCategories([]);
-                const newParams = new URLSearchParams(location.search);
-                newParams.delete('category');
-                const newUrl = `${location.pathname}?${newParams.toString()}`;
-                window.history.pushState({}, '', newUrl);
-              }}
+              onClick={handleClearFilters}
               className="text-sm text-blue-600 hover:underline"
             >
               Clear filters
@@ -258,7 +329,7 @@ const Product = () => {
             <div className="text-center py-20 text-lg font-medium">Loading products...</div>
           ) : error ? (
             <div className="text-center py-20 text-lg font-medium text-red-600">{error}</div>
-          ) : filteredProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="text-center py-20 text-lg font-medium">
               {selectedCategories.length > 0 
                 ? `No products found in ${selectedCategories.join(', ')} category.`
@@ -266,48 +337,109 @@ const Product = () => {
               }
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => {
-                // Check wishlist status with multiple field checks
-                const isInWishlist = wishlistItems.some(item => 
-                  item._id === product._id || 
-                  item.id === product._id || 
-                  item.product?._id === product._id
-                );
-                
-                return (
-                  <div
-                    key={product._id || product.id}
-                    className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
-                  >
-                    <button
-                      className={`absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100 transition-colors ${
-                        isInWishlist ? 'text-red-500' : 'text-gray-400'
-                      }`}
-                      onClick={(e) => handleWishlistClick(e, product._id)}
-                      title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {products.map((product) => {
+                  const isInWishlist = wishlistItems.some(item => 
+                    item._id === product._id || 
+                    item.id === product._id || 
+                    item.product?._id === product._id
+                  );
+                  
+                  return (
+                    <div
+                      key={product._id || product.id}
+                      className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
                     >
-                      <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
-                    </button>
-                    <Link
-                      to={`/productview/${product._id || product.id}`}
-                      className="w-full flex flex-col items-center"
-                    >
-                      <img
-                        src={Array.isArray(product.images) ? product.images[0] : product.images || "https://via.placeholder.com/150"}
-                        alt={product.name}
-                        className="w-28 h-28 object-contain mb-4"
-                      />
-                      <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
-                      <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
-                      <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
-                        Rent Now
+                      <button
+                        className={`absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100 transition-colors ${
+                          isInWishlist ? 'text-red-500' : 'text-gray-400'
+                        }`}
+                        onClick={(e) => handleWishlistClick(e, product._id)}
+                        title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
                       </button>
-                    </Link>
+                      <Link
+                        to={`/productview/${product._id || product.id}`}
+                        className="w-full flex flex-col items-center"
+                      >
+                        <img
+                          src={Array.isArray(product.images) ? product.images[0] : product.images || "https://via.placeholder.com/150"}
+                          alt={product.name}
+                          className="w-28 h-28 object-contain mb-4"
+                        />
+                        <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
+                        <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
+                        <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
+                          Rent Now
+                        </button>
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="mt-8 flex justify-center items-center space-x-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-md ${
+                      currentPage === 1
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center space-x-2">
+                    {[...Array(pagination.totalPages)].map((_, index) => {
+                      const pageNumber = index + 1;
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === pagination.totalPages ||
+                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`px-4 py-2 rounded-md ${
+                              currentPage === pageNumber
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      } else if (
+                        pageNumber === currentPage - 2 ||
+                        pageNumber === currentPage + 2
+                      ) {
+                        return <span key={pageNumber}>...</span>;
+                      }
+                      return null;
+                    })}
                   </div>
-                );
-              })}
-            </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === pagination.totalPages}
+                    className={`px-4 py-2 rounded-md ${
+                      currentPage === pagination.totalPages
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

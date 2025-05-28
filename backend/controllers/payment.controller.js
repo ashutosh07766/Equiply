@@ -28,7 +28,7 @@ const processPayment = async (req, res) => {
         }
         
         // Get the order
-        const order = await Order.findById(orderId);
+        const order = await Order.findById(orderId).populate('products.productId');
         
         // Check if order exists
         if (!order) {
@@ -80,10 +80,16 @@ const processPayment = async (req, res) => {
             await payment.save();
             await order.save();
 
+            // Get product names for notification
+            const productNames = order.products.map(product => product.name || product.productId?.name || 'Unknown Product');
+            const notificationMessage = productNames.length > 1
+                ? `Your order for ${productNames[0]} and ${productNames.length - 1} more items has been placed successfully!`
+                : `Your order for ${productNames[0]} has been placed successfully!`;
+
             // Create a notification for the user
             await Notification.create({
                 userId: order.userId,
-                message: `Your order with (${order._id}) has been placed successfully!`
+                message: notificationMessage
             });
             
             return res.status(200).json({

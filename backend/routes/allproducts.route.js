@@ -4,10 +4,12 @@ const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth.js');
 const checkBanned = require('../middleware/checkBanned.js');
 
-const {getAllProducts, product, createProduct, getFeaturedProducts} = require('../controllers/products.controller.js');
+const {getAllProducts, product, createProduct, getFeaturedProducts, searchProducts} = require('../controllers/products.controller.js');
 
 const productRouter = express.Router();
 
+// Add search route before the :id route to prevent conflicts
+productRouter.get('/search', searchProducts);
 productRouter.get('/', getAllProducts);
 productRouter.get('/featured', getFeaturedProducts);
 productRouter.get('/:id', product);
