@@ -59,7 +59,7 @@ const Header = () => {
   const fetchNotifications = async () => {
     if (!userId) return;
     try {
-      const { data } = await axios.get(`http://localhost:3000/api/notifications/${userId}`);
+      const { data } = await axios.get(`https://equiply-jrej.onrender.com/api/notifications/${userId}`);
       setNotifications(data);
     } catch (err) {
       console.error("Failed to fetch notifications", err);
@@ -68,7 +68,7 @@ const Header = () => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.patch(`http://localhost:3000/api/notifications/${id}/read`);
+      await axios.patch(`https://equiply-jrej.onrender.com/api/notifications/${id}/read`);
       setNotifications((prev) =>
         prev.map((notif) =>
           notif._id === id ? { ...notif, read: true } : notif
