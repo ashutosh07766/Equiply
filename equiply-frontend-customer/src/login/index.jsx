@@ -19,7 +19,7 @@ const Login = () => {
     setErrorMsg('');
     
     try {
-      const response = await fetch('http://localhost:3000/user/signin', {
+      const response = await fetch('https://equiply-jrej.onrender.com/user/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

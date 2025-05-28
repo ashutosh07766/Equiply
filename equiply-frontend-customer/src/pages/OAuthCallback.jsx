@@ -47,7 +47,7 @@ const OAuthCallback = () => {
         const userInfo = await userInfoResponse.json();
         
         // Send to backend
-        const serverResponse = await fetch('http://localhost:3000/oauth/google', {
+        const serverResponse = await fetch('https://equiply-jrej.onrender.com/oauth/google', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

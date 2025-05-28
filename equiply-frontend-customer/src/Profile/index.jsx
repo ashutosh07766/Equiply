@@ -78,7 +78,7 @@ const Profile = () => {
 
     const fetchProfileData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/profile', {
+        const response = await axios.get('https://equiply-jrej.onrender.com/api/profile', {
           headers: { 'x-access-token': token }
         });
         
@@ -166,7 +166,7 @@ const Profile = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.put('http://localhost:3000/api/profile', editedData, {
+      const response = await axios.put('https://equiply-jrej.onrender.com/api/profile', editedData, {
         headers: { 'x-access-token': token }
       });
       
@@ -192,7 +192,7 @@ const Profile = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.post('http://localhost:3000/api/profile/address', {
+      const response = await axios.post('https://equiply-jrej.onrender.com/api/profile/address', {
         ...newAddress,
         label: newAddress.label.trim(),
         address: newAddress.address.trim(),
@@ -222,7 +222,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('authToken');
       const address = userData.addresses.find(addr => addr._id === addressId);
-      const response = await axios.put(`http://localhost:3000/api/profile/address/${addressId}`, address, {
+      const response = await axios.put(`https://equiply-jrej.onrender.com/api/profile/address/${addressId}`, address, {
         headers: { 'x-access-token': token }
       });
       
@@ -240,7 +240,7 @@ const Profile = () => {
   const handleDeleteAddress = async (addressId) => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.delete(`http://localhost:3000/api/profile/address/${addressId}`, {
+      const response = await axios.delete(`https://equiply-jrej.onrender.com/api/profile/address/${addressId}`, {
         headers: { 'x-access-token': token }
       });
       

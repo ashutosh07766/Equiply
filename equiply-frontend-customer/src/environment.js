@@ -23,6 +23,6 @@ window.process.env.REACT_APP_GOOGLE_CLIENT_ID =
 window.process.env.REACT_APP_API_URL = 
   window.process.env.REACT_APP_API_URL ||
   import.meta?.env?.VITE_API_URL ||
-  'http://localhost:3000';
+  'https://equiply-jrej.onrender.com';
 
 export default window.process.env;

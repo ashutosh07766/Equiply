@@ -59,7 +59,7 @@ const Header = () => {
   const fetchNotifications = async () => {
     if (!userId) return;
     try {
-      const { data } = await axios.get(`http://localhost:3000/api/notifications/${userId}`);
+      const { data } = await axios.get(`https://equiply-jrej.onrender.com/api/notifications/${userId}`);
       setNotifications(data);
     } catch (err) {
       console.error("Failed to fetch notifications", err);
@@ -68,7 +68,7 @@ const Header = () => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.patch(`http://localhost:3000/api/notifications/${id}/read`);
+      await axios.patch(`https://equiply-jrej.onrender.com/api/notifications/${id}/read`);
       setNotifications((prev) =>
         prev.map((notif) =>
           notif._id === id ? { ...notif, read: true } : notif
@@ -89,11 +89,19 @@ const Header = () => {
   };
 
   const handleSearch = (e) => {
+    if (e.key === "Enter") {
+      if (searchTerm.trim()) {
+        navigate(`/product?search=${encodeURIComponent(searchTerm.trim())}`);
+      } else {
+        navigate("/product");
+      }
+    }
+  };
+
+  const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    if (value.trim()) {
-      navigate(`/product?search=${encodeURIComponent(value.trim())}`);
-    } else {
+    if (value.trim() === "") {
       navigate("/product");
     }
   };
@@ -143,7 +151,8 @@ const Header = () => {
             placeholder="Search"
             className="w-full pl-10 pr-4 py-2 rounded-md text-black text-sm placeholder-gray-400 focus:outline-none"
             value={searchTerm}
-            onChange={handleSearch}
+            onChange={handleInputChange}
+            onKeyDown={handleSearch}
           />
         </div>
       </div>

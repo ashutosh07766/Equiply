@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const userRouter = require('./routes/user.route.js');
-const productRouter = require('./routes/product.routes.js');
+const productRouter = require('./routes/allproducts.route.js');
 const reviewRouter = require('./routes/review.route.js');
 const checkoutRouter = require('./routes/checkout.route.js');
 const paymentRouter = require('./routes/payment.route.js');
@@ -20,7 +20,7 @@ const app = express();
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000','http://localhost:3000'],
+  origin: ['http://localhost:5173', 'http://localhost:3000','https://equiply-jrej.onrender.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'],
   credentials: true

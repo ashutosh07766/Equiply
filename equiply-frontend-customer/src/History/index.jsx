@@ -23,7 +23,7 @@ const History = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:3000/checkout/my-orders', {
+        const response = await axios.get('https://equiply-jrej.onrender.com/checkout/my-orders', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'x-access-token': token
@@ -56,7 +56,7 @@ const History = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:3000/product', {
+        const response = await axios.get('https://equiply-jrej.onrender.com/product', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'x-access-token': token

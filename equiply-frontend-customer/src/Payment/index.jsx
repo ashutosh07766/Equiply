@@ -109,7 +109,7 @@ const Payment = () => {
         };
       }
 
-      const response = await fetch('http://localhost:3000/payment/process', {
+      const response = await fetch('https://equiply-jrej.onrender.com/payment/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
