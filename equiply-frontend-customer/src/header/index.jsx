@@ -11,7 +11,7 @@ import {
   FaUpload,
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext, useCallback } from "react";
 import indianCities from "../data/cities";
 import axios from "axios";
 import { WishlistContext } from '../product';
@@ -33,6 +33,7 @@ const Header = () => {
   const dropdownRef = useRef(null);
   const userMenuRef = useRef(null);
   const bellRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   const userId = JSON.parse(localStorage.getItem("userData"))?._id;
 
@@ -88,22 +89,28 @@ const Header = () => {
     window.location.reload();
   };
 
-  const handleSearch = (e) => {
-    if (e.key === "Enter") {
-      if (searchTerm.trim()) {
-        navigate(`/product?search=${encodeURIComponent(searchTerm.trim())}`);
-      } else {
-        navigate("/product");
-      }
+  const handleSearch = useCallback((value) => {
+    const trimmedSearch = value.trim();
+    if (trimmedSearch) {
+      navigate(`/product?search=${encodeURIComponent(trimmedSearch)}`, { replace: true });
+    } else {
+      navigate("/product", { replace: true });
     }
-  };
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    if (value.trim() === "") {
-      navigate("/product");
+
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+
+    // Set a new timeout to debounce the search
+    searchTimeoutRef.current = setTimeout(() => {
+      handleSearch(value);
+    }, 300); // 300ms delay
   };
 
   return (
@@ -152,7 +159,6 @@ const Header = () => {
             className="w-full pl-10 pr-4 py-2 rounded-md text-black text-sm placeholder-gray-400 focus:outline-none"
             value={searchTerm}
             onChange={handleInputChange}
-            onKeyDown={handleSearch}
           />
         </div>
       </div>
@@ -181,7 +187,9 @@ const Header = () => {
                         }`}
                         onClick={() => markAsRead(notif._id)}
                       >
-                        {notif.message}
+                        {notif.message.length > 50 
+                          ? notif.message.substring(0, 47) + "..."
+                          : notif.message}
                       </div>
                     ))
                   )}
