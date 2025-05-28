@@ -22,7 +22,7 @@ const Wishlist = () => {
                 return;
             }
 
-            const response = await axios.get('http://localhost:3000/wishlist', {
+            const response = await axios.get('https://equiply-jrej.onrender.com/wishlist', {
                 headers: { 'x-access-token': token }
             });
             console.log('Wishlist response:', response.data);
@@ -53,7 +53,7 @@ const Wishlist = () => {
         }
 
         try {
-            await axios.delete(`http://localhost:3000/wishlist/remove/${productId}`, {
+            await axios.delete(`https://equiply-jrej.onrender.com/wishlist/remove/${productId}`, {
                 headers: { 'x-access-token': token }
             });
             // Remove item from local state using multiple ID fields

@@ -15,7 +15,9 @@ const GoogleLoginButton = () => {
       
       // Create the OAuth URL with the correct redirect URI
       const clientId = '413786747217-shtsu3g52852filvh897jc6si15grtkg.apps.googleusercontent.com';
-      const redirectUri = encodeURIComponent('http://localhost:5173/oauth-callback');
+      // Use the same hostname for the redirect URI as the current page
+      const currentHost = window.location.origin;
+      const redirectUri = encodeURIComponent(`${currentHost}/oauth-callback`);
       const scope = encodeURIComponent('email profile');
       const responseType = 'token';
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +

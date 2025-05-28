@@ -23,14 +23,14 @@ const History = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:3000/checkout/my-orders', {
+        const response = await axios.get('https://equiply-jrej.onrender.com/checkout/my-orders', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'x-access-token': token
           }
         });
-        console.log('Orders response:', response.data); // Add this for debugging
-        setOrders(response.data.orders || []); // Ensure we handle the correct data structure
+        console.log('Orders response:', response.data); 
+        setOrders(response.data.orders || []); 
         setLoading(false);
       } catch (error) {
         console.error('Error fetching orders:', error.response?.data || error.message);
@@ -56,7 +56,7 @@ const History = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:3000/product', {
+        const response = await axios.get('https://equiply-jrej.onrender.com/product', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'x-access-token': token

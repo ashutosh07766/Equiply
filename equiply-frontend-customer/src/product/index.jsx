@@ -18,7 +18,7 @@ export const WishlistProvider = ({ children }) => {
     if (!token) return;
     
     try {
-      const response = await axios.get('http://localhost:3000/wishlist', {
+      const response = await axios.get('https://equiply-jrej.onrender.com/wishlist', {
         headers: { 'x-access-token': token }
       });
       console.log('Wishlist API Response:', response.data);
@@ -95,7 +95,7 @@ const Product = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:3000/product");
+        const response = await fetch("https://equiply-jrej.onrender.com/product");
         const data = await response.json();
         setProducts(Array.isArray(data) ? data : data.products || data.data || data.items || []);
         setLoading(false);
@@ -146,7 +146,7 @@ const Product = () => {
       );
       
       if (isInWishlist) {
-        await axios.delete(`http://localhost:3000/wishlist/remove/${productId}`, {
+        await axios.delete(`https://equiply-jrej.onrender.com/wishlist/remove/${productId}`, {
           headers: { 'x-access-token': token }
         });
         setToast({
@@ -155,7 +155,7 @@ const Product = () => {
           type: 'success'
         });
       } else {
-        await axios.post('http://localhost:3000/wishlist/add', 
+        await axios.post('https://equiply-jrej.onrender.com/wishlist/add', 
           { productId },
           { headers: { 'x-access-token': token } }
         );

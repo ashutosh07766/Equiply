@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create base API instance with default config
 const api = axios.create({
-  baseURL: 'http://localhost:3000'
+  baseURL: 'https://equiply-jrej.onrender.com'
 });
 
 // Add a request interceptor to include auth token
