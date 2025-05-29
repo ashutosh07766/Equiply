@@ -88,7 +88,7 @@ Equiply is a full-stack web application that enables users to rent equipment and
    ```bash
    npm run dev
    ```
-   The server will run on http://localhost:3000
+   The server will run on https://equiply-jrej.onrender.com
 
 ### Frontend Setup
 
@@ -106,7 +106,7 @@ Equiply is a full-stack web application that enables users to rent equipment and
    Create a `.env` file in the frontend directory with:
    ```
    VITE_GOOGLE_CLIENT_ID=your_google_client_id
-   VITE_API_URL=http://localhost:3000
+   VITE_API_URL=https://equiply-jrej.onrender.com
    ```
 
 4. **Start the development server**

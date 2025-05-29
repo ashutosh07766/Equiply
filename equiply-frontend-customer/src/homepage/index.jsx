@@ -13,28 +13,34 @@ const Homepage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        const selectedCity = localStorage.getItem('selectedCity') || 'Bengaluru';
+        
         // Get featured products from the public endpoint
-        const featuredResponse = await fetch("https://equiply-jrej.onrender.com/product/featured");
+        const featuredResponse = await fetch(`https://equiply-jrej.onrender.com/product/featured?city=${encodeURIComponent(selectedCity)}`);
         const featuredData = await featuredResponse.json();
         
-        if (featuredData.success && Array.isArray(featuredData.featuredProducts)) {
-          setFeaturedProducts(featuredData.featuredProducts);
+        if (featuredData.success) {
+          setFeaturedProducts(featuredData.featuredProducts || []);
         } else {
           setFeaturedProducts([]);
         }
         
         // Get all products for the "Most Popular" section
-        const response = await fetch("https://equiply-jrej.onrender.com/product");
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
+        const response = await fetch(`https://equiply-jrej.onrender.com/product?city=${encodeURIComponent(selectedCity)}`);
         const data = await response.json();
-        setProducts(Array.isArray(data.products) ? data.products : []);
+        
+        if (data.success) {
+          setProducts(Array.isArray(data.products) ? data.products : []);
+        } else {
+          setProducts([]);
+        }
         
         setLoading(false);
       } catch (err) {
         console.error("Error in fetchProducts:", err);
-        setError(err.message);
+        setError(null); // Don't show error message, just show empty state
+        setFeaturedProducts([]);
+        setProducts([]);
         setLoading(false);
       }
     };
@@ -157,7 +163,7 @@ const Homepage = () => {
           </div>
         </div>
 
-        {/* Featured Products Section - Enhanced Title Only */}
+        {/* Featured Products Section */}
         <div className="mb-12">
           <div className="relative text-center mb-10">
             <h2 className="text-neutral-700 text-4xl font-bold font-['Oxygen']">
@@ -169,8 +175,6 @@ const Homepage = () => {
 
           {loading ? (
             <div className="text-center py-8">Loading products...</div>
-          ) : error ? (
-            <div className="text-center text-red-500 py-8">Error: {error}</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {Array.isArray(featuredProducts) && featuredProducts.length > 0 ? (
@@ -199,15 +203,25 @@ const Homepage = () => {
                   </div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-8 text-gray-500">
-                  No featured products available at the moment.
+                <div className="col-span-full text-center py-8">
+                  <div className="bg-gray-50 rounded-lg p-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <p className="text-gray-600 font-medium">
+                      No featured products available in {localStorage.getItem('selectedCity') || 'Bengaluru'} at the moment.
+                    </p>
+                    <p className="text-gray-500 mt-2 text-sm">
+                      Try selecting a different city or check back later for new listings.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Popular Products Section - Enhanced Title Only */}
+        {/* Popular Products Section */}
         <div className="mb-12">
           <div className="flex flex-col md:flex-row justify-between items-center mb-10">
             <div className="relative mb-4 md:mb-0">
@@ -258,8 +272,18 @@ const Homepage = () => {
                 </div>
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-gray-500">
-                No products available at the moment.
+              <div className="col-span-full text-center py-8">
+                <div className="bg-gray-50 rounded-lg p-8">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <p className="text-gray-600 font-medium">
+                    No products available in {localStorage.getItem('selectedCity') || 'Bengaluru'} at the moment.
+                  </p>
+                  <p className="text-gray-500 mt-2 text-sm">
+                    Try selecting a different city or check back later for new listings.
+                  </p>
+                </div>
               </div>
             )}
           </div>

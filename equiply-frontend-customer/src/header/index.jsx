@@ -23,7 +23,7 @@ const Header = () => {
   const { wishlistItems = [] } = useContext(WishlistContext) || {};
 
   const [searchTerm, setSearchTerm] = useState(params.get("search") || "");
-  const [selectedCity, setSelectedCity] = useState("Bengaluru");
+  const [selectedCity, setSelectedCity] = useState(localStorage.getItem('selectedCity') || "Bengaluru");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -155,13 +155,26 @@ const Header = () => {
           </div>
           {isDropdownOpen && (
             <div className="absolute top-full left-0 mt-1 bg-white text-black shadow-lg rounded-md py-2 z-10 max-h-60 overflow-y-auto w-48 transition-all duration-200 ease-in-out">
+              <div
+                className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm transition-colors font-medium text-blue-600 border-b border-gray-100"
+                onClick={() => {
+                  setSelectedCity("All Cities");
+                  localStorage.setItem('selectedCity', "All Cities");
+                  setIsDropdownOpen(false);
+                  window.location.reload();
+                }}
+              >
+                All Cities
+              </div>
               {indianCities.map((city, index) => (
                 <div
                   key={index}
                   className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm transition-colors"
                   onClick={() => {
                     setSelectedCity(city);
+                    localStorage.setItem('selectedCity', city);
                     setIsDropdownOpen(false);
+                    window.location.reload();
                   }}
                 >
                   {city}

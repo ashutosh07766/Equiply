@@ -114,6 +114,10 @@ const Product = () => {
         }
         searchParams.append('page', pagination.currentPage.toString());
         searchParams.append('limit', pagination.productsPerPage.toString());
+        
+        // Add city parameter from localStorage
+        const selectedCity = localStorage.getItem('selectedCity') || 'Bengaluru';
+        searchParams.append('city', selectedCity);
 
         const url = `https://equiply-jrej.onrender.com/product/search?${searchParams.toString()}`;
         console.log('Fetching products from:', url);
