@@ -84,6 +84,7 @@ const Product = () => {
     totalProducts: 0,
     productsPerPage: parseInt(limitParam)
   });
+  const [sortOrder, setSortOrder] = useState("default"); // Add this new state for price sorting
   
   // Add default empty arrays to prevent "undefined.map()" errors
   const { wishlistItems = [], updateWishlist } = useContext(WishlistContext) || {};
@@ -192,6 +193,21 @@ const Product = () => {
     navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
   };
 
+  // Add this new handler for sorting products by price
+  const handleSortChange = (order) => {
+    setSortOrder(order);
+    
+    // Sort products based on the selected order
+    const sortedProducts = [...products];
+    if (order === "lowToHigh") {
+      sortedProducts.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+    } else if (order === "highToLow") {
+      sortedProducts.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+    }
+    
+    setProducts(sortedProducts);
+  };
+
   const handleWishlistClick = async (e, productId) => {
     e.preventDefault();
     e.stopPropagation();
@@ -245,7 +261,7 @@ const Product = () => {
   };
 
   return (
-    <div>
+    <div className="bg-gray-50 min-h-screen">
       <Header />
       {toast.show && (
         <Toast
@@ -255,56 +271,106 @@ const Product = () => {
         />
       )}
 
-      <div className="max-w-[90%] mx-auto px-2 sm:px-4 pb-8">
+      <div className="max-w-[90%] mx-auto px-2 sm:px-4 pb-12 pt-6">
         {/* Back Button */}
-        <div className="mt-8 mb-6">
+        <div className="mb-6">
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-black hover:text-gray-700 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
             <span>Back to Home</span>
           </button>
         </div>
 
-        {/* Title Section */}
-        <div className="mb-8">
-          <div className="text-center text-neutral-700 text-4xl font-bold font-['Oxygen'] mb-6">
-            Browse Products
+        {/* Enhanced Title Section */}
+        <div className="mb-10">
+          <div className="text-center">
+            <h1 className="text-neutral-700 text-4xl font-bold font-['Oxygen'] mb-2">
+              Browse Products
+            </h1>
+            <div className="mt-2 w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
+            <p className="text-gray-500 mt-3">Find the perfect equipment for your needs</p>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
-          <aside className="w-full lg:w-1/5 space-y-4">
-            <h2 className="font-semibold text-lg">Filter by Category</h2>
-            {["Mobile", "Electronics", "House Appliances", "Accessories", "Tools", "Music", "Transport", "Gaming", "Books", "Costume", "Other"].map((cat) => (
-              <label key={cat} className="block text-sm">
-                <input
-                  type="checkbox"
-                  className="mr-2"
-                  checked={selectedCategories.includes(cat)}
-                  onChange={() => handleCategoryChange(cat)}
-                />
-                {cat}
-              </label>
-            ))}
-            
-            {selectedCategories.length > 0 && (
-              <button
-                onClick={handleClearFilters}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Clear filters
-              </button>
-            )}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Enhanced Sidebar */}
+          <aside className="w-full lg:w-1/5 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              {/* Add Sort by Price section */}
+              <div className="mb-8">
+                <h2 className="font-semibold text-lg mb-3 border-b pb-2">Sort by Price</h2>
+                <div className="space-y-3 pt-2">
+                  <label className="block text-sm">
+                    <input
+                      type="radio"
+                      name="sort"
+                      className="mr-2"
+                      checked={sortOrder === "default"}
+                      onChange={() => handleSortChange("default")}
+                    />
+                    Default
+                  </label>
+                  <label className="block text-sm">
+                    <input
+                      type="radio"
+                      name="sort"
+                      className="mr-2"
+                      checked={sortOrder === "lowToHigh"}
+                      onChange={() => handleSortChange("lowToHigh")}
+                    />
+                    Price: Low to High
+                  </label>
+                  <label className="block text-sm">
+                    <input
+                      type="radio"
+                      name="sort"
+                      className="mr-2"
+                      checked={sortOrder === "highToLow"}
+                      onChange={() => handleSortChange("highToLow")}
+                    />
+                    Price: High to Low
+                  </label>
+                </div>
+              </div>
+
+              {/* Enhanced Category Filter */}
+              <h2 className="font-semibold text-lg mb-3 border-b pb-2">Filter by Category</h2>
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                {["Mobile", "Electronics", "House Appliances", "Accessories", "Tools", "Music", "Transport", "Gaming", "Books", "Costume", "Other"].map((cat) => (
+                  <label key={cat} className="block text-sm">
+                    <input
+                      type="checkbox"
+                      className="mr-2"
+                      checked={selectedCategories.includes(cat)}
+                      onChange={() => handleCategoryChange(cat)}
+                    />
+                    {cat}
+                  </label>
+                ))}
+              </div>
+              
+              {selectedCategories.length > 0 && (
+                <button
+                  onClick={handleClearFilters}
+                  className="mt-4 text-sm flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  Clear all filters
+                </button>
+              )}
+            </div>
           </aside>
 
-          {/* Main Content */}
+          {/* Main Content - Keep product cards the same */}
           <main className="flex-1">
+            {/* Enhanced Active Filters Display */}
             {selectedCategories.length > 0 && (
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">Active filters:</p>
+              <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+                <p className="text-sm text-gray-600 mb-3 font-medium">Active filters:</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedCategories.map((category) => (
                     <span
@@ -324,20 +390,58 @@ const Product = () => {
               </div>
             )}
 
+            {/* Enhanced Loading State */}
             {loading ? (
-              <div className="text-center py-8">Loading products...</div>
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+                <p className="mt-4 text-gray-600">Loading products...</p>
+              </div>
             ) : error ? (
-              <div className="text-center text-red-500 py-8">Error: {error}</div>
+              <div className="bg-red-50 border border-red-200 rounded-xl shadow-sm p-8 text-center">
+                <p className="text-red-600 font-medium">Error: {error}</p>
+                <button className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors" onClick={() => window.location.reload()}>
+                  Try Again
+                </button>
+              </div>
             ) : products.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-gray-500">
-                {selectedCategories.length > 0 
-                  ? `No products found in ${selectedCategories.join(', ')} category.`
-                  : "No products found."
-                }
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <p className="text-gray-600 font-medium">
+                  {selectedCategories.length > 0 
+                    ? `No products found in ${selectedCategories.join(', ')} category.`
+                    : "No products found."
+                  }
+                </p>
               </div>
             ) : (
               <>
+                {/* Products Count Info */}
+                <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-center">
+                    <p className="text-gray-600 mb-2 sm:mb-0">
+                      Showing <span className="font-medium">{products.length}</span> of <span className="font-medium">{pagination.totalProducts}</span> products
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-600">Items per page:</label>
+                      <select
+                        value={pagination.productsPerPage}
+                        onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                        className="border rounded px-2 py-1 text-sm bg-gray-50"
+                      >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Products Grid - Keep exactly as is */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {/* Original product cards - unchanged */}
                   {products.map((product) => {
                     const isInWishlist = wishlistItems.some(item => 
                       item._id === product._id || 
@@ -379,46 +483,45 @@ const Product = () => {
                   })}
                 </div>
 
-                {/* Pagination Controls */}
-                <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Items per page:</span>
-                    <select
-                      value={pagination.productsPerPage}
-                      onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                      className="border rounded px-2 py-1 text-sm"
+                {/* Enhanced Pagination Controls */}
+                <div className="mt-8 flex justify-center">
+                  <div className="bg-white rounded-lg shadow-sm inline-flex items-center overflow-hidden">
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={pagination.currentPage === 1}
+                      className="px-3 py-2 border-r disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      title="First page"
                     >
-                      <option value="5">5</option>
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="50">50</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
+                      «
+                    </button>
                     <button
                       onClick={() => handlePageChange(pagination.currentPage - 1)}
                       disabled={pagination.currentPage === 1}
-                      className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-2 border-r disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                     >
-                      Previous
+                      ‹
                     </button>
                     
-                    <span className="text-sm">
-                      Page {pagination.currentPage} of {pagination.totalPages}
-                    </span>
+                    {/* Page number display */}
+                    <div className="px-4 py-2 font-medium">
+                      {pagination.currentPage} of {pagination.totalPages}
+                    </div>
                     
                     <button
                       onClick={() => handlePageChange(pagination.currentPage + 1)}
                       disabled={pagination.currentPage === pagination.totalPages}
-                      className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-2 border-l disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                     >
-                      Next
+                      ›
                     </button>
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    Showing {products.length} of {pagination.totalProducts} products
+                    <button
+                      onClick={() => handlePageChange(pagination.totalPages)}
+                      disabled={pagination.currentPage === pagination.totalPages}
+                      className="px-3 py-2 border-l disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      title="Last page"
+                    >
+                      »
+                    </button>
                   </div>
                 </div>
               </>
