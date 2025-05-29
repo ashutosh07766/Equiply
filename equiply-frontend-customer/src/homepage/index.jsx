@@ -79,7 +79,7 @@ const Homepage = () => {
                   />
                   <h3 className="text-sm font-medium mb-2">{product.name}</h3>
                   <p className="text-lg font-bold mb-2">₹{product.price}</p>
-                  <Link to={`/productveiw/${product._id}`}>
+                  <Link to={`/productview/${product._id}`}>
                     <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
                       Rent Now
                     </button>

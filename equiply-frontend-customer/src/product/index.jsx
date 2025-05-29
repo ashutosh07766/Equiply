@@ -1,8 +1,7 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import Header from "../header";
 import Footer from "../Footer";
-import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import axios from "axios";
 
@@ -70,6 +69,8 @@ const Product = () => {
   const params = new URLSearchParams(location.search);
   const searchTerm = params.get("search") || "";
   const categoryParam = params.get("category") || "";
+  const pageParam = params.get("page") || "1";
+  const limitParam = params.get("limit") || "10";
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,12 @@ const Product = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [pagination, setPagination] = useState({
+    currentPage: parseInt(pageParam),
+    totalPages: 1,
+    totalProducts: 0,
+    productsPerPage: parseInt(limitParam)
+  });
   
   const { wishlistItems, updateWishlist } = useContext(WishlistContext);
 
@@ -88,25 +95,55 @@ const Product = () => {
   useEffect(() => {
     // Set initial category filter from URL parameter
     if (categoryParam) {
-      setSelectedCategories([categoryParam]);
+      setSelectedCategories(categoryParam.split(','));
     }
   }, [categoryParam]);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("https://equiply-jrej.onrender.com/product");
+        setLoading(true);
+        const searchParams = new URLSearchParams();
+        if (searchTerm) {
+          searchParams.append('search', searchTerm);
+        }
+        if (selectedCategories.length > 0) {
+          searchParams.append('category', selectedCategories.join(','));
+        }
+        searchParams.append('page', pagination.currentPage.toString());
+        searchParams.append('limit', pagination.productsPerPage.toString());
+
+        const url = `https://equiply-jrej.onrender.com/product/search?${searchParams.toString()}`;
+        console.log('Fetching products from:', url);
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+
         const data = await response.json();
-        setProducts(Array.isArray(data) ? data : data.products || data.data || data.items || []);
+        console.log('Received products data:', data);
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to load products');
+        }
+
+        setProducts(data.products || []);
+        setPagination(prev => ({
+          ...prev,
+          totalPages: data.pagination?.totalPages || 1,
+          totalProducts: data.pagination?.totalProducts || 0
+        }));
         setLoading(false);
       } catch (err) {
-        setError("Failed to load products");
+        console.error('Error fetching products:', err);
+        setError(err.message || "Failed to load products");
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [searchTerm, selectedCategories, pagination.currentPage, pagination.productsPerPage]);
 
   const handleCategoryChange = (category) => {
     const newCategories = selectedCategories.includes(category) 
@@ -114,17 +151,43 @@ const Product = () => {
       : [...selectedCategories, category];
     
     setSelectedCategories(newCategories);
+    setPagination(prev => ({ ...prev, currentPage: 1 })); // Reset to first page when changing categories
     
-    // Update URL to reflect current filters
     const newParams = new URLSearchParams(location.search);
     if (newCategories.length > 0) {
       newParams.set('category', newCategories.join(','));
     } else {
       newParams.delete('category');
     }
+    newParams.set('page', '1'); // Reset to first page
     
-    const newUrl = `${location.pathname}?${newParams.toString()}`;
-    window.history.pushState({}, '', newUrl);
+    navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategories([]);
+    setPagination(prev => ({ ...prev, currentPage: 1 })); // Reset to first page when clearing filters
+    
+    const newParams = new URLSearchParams(location.search);
+    newParams.delete('category');
+    newParams.set('page', '1'); // Reset to first page
+    
+    navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+  };
+
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+    const newParams = new URLSearchParams(location.search);
+    newParams.set('page', newPage.toString());
+    navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+  };
+
+  const handleItemsPerPageChange = (newLimit) => {
+    setPagination(prev => ({ ...prev, productsPerPage: newLimit, currentPage: 1 }));
+    const newParams = new URLSearchParams(location.search);
+    newParams.set('limit', newLimit.toString());
+    newParams.set('page', '1');
+    navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
   };
 
   const handleWishlistClick = async (e, productId) => {
@@ -138,7 +201,6 @@ const Product = () => {
     }
 
     try {
-      // Check if product is in wishlist using both _id and id fields
       const isInWishlist = wishlistItems.some(item => 
         item._id === productId || 
         item.id === productId || 
@@ -165,7 +227,7 @@ const Product = () => {
           type: 'success'
         });
       }
-      updateWishlist(); // Update wishlist count globally
+      updateWishlist();
     } catch (error) {
       console.error('Error toggling wishlist:', error);
       setToast({
@@ -179,13 +241,6 @@ const Product = () => {
       }
     }
   };
-
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategories.length === 0 || selectedCategories.includes(product.category);
-    return matchesSearch && matchesCategory;
-  });
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -213,16 +268,9 @@ const Product = () => {
             </label>
           ))}
           
-          {/* Clear filters button */}
           {selectedCategories.length > 0 && (
             <button
-              onClick={() => {
-                setSelectedCategories([]);
-                const newParams = new URLSearchParams(location.search);
-                newParams.delete('category');
-                const newUrl = `${location.pathname}?${newParams.toString()}`;
-                window.history.pushState({}, '', newUrl);
-              }}
+              onClick={handleClearFilters}
               className="text-sm text-blue-600 hover:underline"
             >
               Clear filters
@@ -231,7 +279,6 @@ const Product = () => {
         </aside>
 
         <main className="flex-1">
-          {/* Show active filters */}
           {selectedCategories.length > 0 && (
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">Active filters:</p>
@@ -258,7 +305,7 @@ const Product = () => {
             <div className="text-center py-20 text-lg font-medium">Loading products...</div>
           ) : error ? (
             <div className="text-center py-20 text-lg font-medium text-red-600">{error}</div>
-          ) : filteredProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="text-center py-20 text-lg font-medium">
               {selectedCategories.length > 0 
                 ? `No products found in ${selectedCategories.join(', ')} category.`
@@ -266,48 +313,92 @@ const Product = () => {
               }
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => {
-                // Check wishlist status with multiple field checks
-                const isInWishlist = wishlistItems.some(item => 
-                  item._id === product._id || 
-                  item.id === product._id || 
-                  item.product?._id === product._id
-                );
-                
-                return (
-                  <div
-                    key={product._id || product.id}
-                    className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
-                  >
-                    <button
-                      className={`absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100 transition-colors ${
-                        isInWishlist ? 'text-red-500' : 'text-gray-400'
-                      }`}
-                      onClick={(e) => handleWishlistClick(e, product._id)}
-                      title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {products.map((product) => {
+                  const isInWishlist = wishlistItems.some(item => 
+                    item._id === product._id || 
+                    item.id === product._id || 
+                    item.product?._id === product._id
+                  );
+                  
+                  return (
+                    <div
+                      key={product._id || product.id}
+                      className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
                     >
-                      <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
-                    </button>
-                    <Link
-                      to={`/productview/${product._id || product.id}`}
-                      className="w-full flex flex-col items-center"
-                    >
-                      <img
-                        src={Array.isArray(product.images) ? product.images[0] : product.images || "https://via.placeholder.com/150"}
-                        alt={product.name}
-                        className="w-28 h-28 object-contain mb-4"
-                      />
-                      <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
-                      <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
-                      <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
-                        Rent Now
+                      <button
+                        className={`absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100 transition-colors ${
+                          isInWishlist ? 'text-red-500' : 'text-gray-400'
+                        }`}
+                        onClick={(e) => handleWishlistClick(e, product._id)}
+                        title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
                       </button>
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
+                      <Link
+                        to={`/productview/${product._id || product.id}`}
+                        className="w-full flex flex-col items-center"
+                      >
+                        <img
+                          src={Array.isArray(product.images) ? product.images[0] : product.images || "https://via.placeholder.com/150"}
+                          alt={product.name}
+                          className="w-28 h-28 object-contain mb-4"
+                        />
+                        <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
+                        <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
+                        <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
+                          Rent Now
+                        </button>
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Items per page:</span>
+                  <select
+                    value={pagination.productsPerPage}
+                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    className="border rounded px-2 py-1 text-sm"
+                  >
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                    className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  <span className="text-sm">
+                    Page {pagination.currentPage} of {pagination.totalPages}
+                  </span>
+                  
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+
+                <div className="text-sm text-gray-600">
+                  Showing {products.length} of {pagination.totalProducts} products
+                </div>
+              </div>
+            </>
           )}
         </main>
       </div>
@@ -317,7 +408,6 @@ const Product = () => {
   );
 };
 
-// Wrap the export with the provider
 export default function ProductWithProvider() {
   return (
     <WishlistProvider>
