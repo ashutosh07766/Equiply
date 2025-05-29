@@ -8,11 +8,12 @@ const api = axios.create({
 // Add a request interceptor to include auth token
 api.interceptors.request.use(
   config => {
-    // Get token from localStorage for every request
-    const token = localStorage.getItem('token');
+    // Get token from localStorage - check both token keys for compatibility
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
     if (token) {
       // Set token in headers for every request
       config.headers['x-access-token'] = token;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
   },
@@ -33,6 +34,8 @@ api.interceptors.response.use(
       // Clear user data
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
       
       // Show banned message
       alert('Your account has been banned. Please contact support.');
@@ -42,10 +45,15 @@ api.interceptors.response.use(
     } else if (error.response && error.response.status === 401) {
       // Handle unauthorized access (token expired/invalid)
       console.log('Unauthorized access - redirecting to login');
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Don't redirect here if it's an admin API call
-      if (!error.config.url.includes('/admin/')) {
+      
+      // Only clear tokens and redirect for non-admin routes
+      // or if specifically requested by the server
+      if (!error.config.url.includes('/admin/') || 
+          (error.response.data && error.response.data.clearAuth)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
         window.location.href = '/login';
       }
     }
