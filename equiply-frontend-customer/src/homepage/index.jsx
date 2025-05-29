@@ -96,7 +96,7 @@ const Homepage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="transform -rotate-6 transition-transform hover:rotate-0 hover:scale-105">
                   <img 
-                    src="https://images.unsplash.com/photo-1575318634028-6a0cfcb60c1a?ixlib=rb-4.0.3&auto=format&fit=crop&q=80&w=200" 
+                    src="https://ucarecdn.com/625ff786-6c58-4003-858f-cb2e550129d9/cameraequipment.jpg" 
                     alt="Camera equipment" 
                     className="rounded-lg shadow-lg h-36 w-36 object-cover"
                   />
@@ -117,7 +117,7 @@ const Homepage = () => {
                 </div>
                 <div className="transform -rotate-6 transition-transform hover:rotate-0 hover:scale-105 mt-8">
                   <img 
-                    src="https://images.unsplash.com/photo-1541664885972-9724a6d60d8f?ixlib=rb-4.0.3&auto=format&fit=crop&q=80&w=200" 
+                    src="https://ucarecdn.com/7e3e19f3-db11-4135-8d75-742d1c3e2191/musicInstruments.jpg" 
                     alt="Musical instruments" 
                     className="rounded-lg shadow-lg h-36 w-36 object-cover"
                   />
