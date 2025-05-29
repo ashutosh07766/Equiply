@@ -2,7 +2,7 @@ import { useState, useEffect, createContext, useContext } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import Header from "../header";
 import Footer from "../Footer";
-import { Heart } from "lucide-react";
+import { Heart, ArrowLeft } from "lucide-react";
 import axios from "axios";
 
 // Create Wishlist Context
@@ -245,7 +245,7 @@ const Product = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div>
       <Header />
       {toast.show && (
         <Toast
@@ -255,154 +255,176 @@ const Product = () => {
         />
       )}
 
-      <div className="flex flex-col lg:flex-row p-6 gap-6 flex-grow">
-        <aside className="w-full lg:w-1/5 space-y-4">
-          <h2 className="font-semibold text-lg">Filter by Category</h2>
-          {["Mobile", "Electronics", "House Appliances", "Accessories", "Tools", "Music", "Transport", "Gaming", "Books", "Costume", "Other"].map((cat) => (
-            <label key={cat} className="block text-sm">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedCategories.includes(cat)}
-                onChange={() => handleCategoryChange(cat)}
-              />
-              {cat}
-            </label>
-          ))}
-          
-          {selectedCategories.length > 0 && (
-            <button
-              onClick={handleClearFilters}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Clear filters
-            </button>
-          )}
-        </aside>
+      <div className="max-w-[90%] mx-auto px-2 sm:px-4 pb-8">
+        {/* Back Button */}
+        <div className="mt-8 mb-6">
+          <button 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-black hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span>Back to Home</span>
+          </button>
+        </div>
 
-        <main className="flex-1">
-          {selectedCategories.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Active filters:</p>
-              <div className="flex flex-wrap gap-2">
-                {selectedCategories.map((category) => (
-                  <span
-                    key={category}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-                  >
-                    {category}
-                    <button
-                      onClick={() => handleCategoryChange(category)}
-                      className="ml-2 hover:text-blue-600"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* Title Section */}
+        <div className="mb-8">
+          <div className="text-center text-neutral-700 text-4xl font-bold font-['Oxygen'] mb-6">
+            Browse Products
+          </div>
+        </div>
 
-          {loading ? (
-            <div className="text-center py-20 text-lg font-medium">Loading products...</div>
-          ) : error ? (
-            <div className="text-center py-20 text-lg font-medium text-red-600">{error}</div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-20 text-lg font-medium">
-              {selectedCategories.length > 0 
-                ? `No products found in ${selectedCategories.join(', ')} category.`
-                : "No products found."
-              }
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {products.map((product) => {
-                  const isInWishlist = wishlistItems.some(item => 
-                    item._id === product._id || 
-                    item.id === product._id || 
-                    item.product?._id === product._id
-                  );
-                  
-                  return (
-                    <div
-                      key={product._id || product.id}
-                      className="border rounded-lg p-4 flex flex-col items-center text-center hover:shadow-lg transition-shadow relative no-underline text-inherit"
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar */}
+          <aside className="w-full lg:w-1/5 space-y-4">
+            <h2 className="font-semibold text-lg">Filter by Category</h2>
+            {["Mobile", "Electronics", "House Appliances", "Accessories", "Tools", "Music", "Transport", "Gaming", "Books", "Costume", "Other"].map((cat) => (
+              <label key={cat} className="block text-sm">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={selectedCategories.includes(cat)}
+                  onChange={() => handleCategoryChange(cat)}
+                />
+                {cat}
+              </label>
+            ))}
+            
+            {selectedCategories.length > 0 && (
+              <button
+                onClick={handleClearFilters}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1">
+            {selectedCategories.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Active filters:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCategories.map((category) => (
+                    <span
+                      key={category}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
                     >
+                      {category}
                       <button
-                        className={`absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100 transition-colors ${
-                          isInWishlist ? 'text-red-500' : 'text-gray-400'
-                        }`}
-                        onClick={(e) => handleWishlistClick(e, product._id)}
-                        title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                        onClick={() => handleCategoryChange(category)}
+                        className="ml-2 hover:text-blue-600"
                       >
-                        <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
+                        ×
                       </button>
-                      <Link
-                        to={`/productview/${product._id || product.id}`}
-                        className="w-full flex flex-col items-center"
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {loading ? (
+              <div className="text-center py-8">Loading products...</div>
+            ) : error ? (
+              <div className="text-center text-red-500 py-8">Error: {error}</div>
+            ) : products.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-gray-500">
+                {selectedCategories.length > 0 
+                  ? `No products found in ${selectedCategories.join(', ')} category.`
+                  : "No products found."
+                }
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {products.map((product) => {
+                    const isInWishlist = wishlistItems.some(item => 
+                      item._id === product._id || 
+                      item.id === product._id || 
+                      item.product?._id === product._id
+                    );
+                    
+                    return (
+                      <div
+                        key={product._id || product.id}
+                        className="border border-gray-200 rounded-lg p-4 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow relative"
                       >
-                        <img
-                          src={Array.isArray(product.images) ? product.images[0] : product.images || "https://via.placeholder.com/150"}
-                          alt={product.name}
-                          className="w-28 h-28 object-contain mb-4"
-                        />
-                        <h3 className="text-sm font-medium mb-2 text-black">{product.name}</h3>
-                        <p className="text-lg font-bold mb-2 text-black">₹{product.price}</p>
-                        <button className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800">
-                          Rent Now
+                        <button
+                          className={`absolute top-2 right-2 p-1 rounded-full bg-white hover:bg-gray-100 transition-colors ${
+                            isInWishlist ? 'text-red-500' : 'text-gray-400'
+                          }`}
+                          onClick={(e) => handleWishlistClick(e, product._id)}
+                          title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                        >
+                          <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} />
                         </button>
-                      </Link>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Pagination Controls */}
-              <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Items per page:</span>
-                  <select
-                    value={pagination.productsPerPage}
-                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                    className="border rounded px-2 py-1 text-sm"
-                  >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                  </select>
+                        <Link
+                          to={`/productview/${product._id || product.id}`}
+                          className="w-full flex flex-col items-center no-underline"
+                        >
+                          <img
+                            src={Array.isArray(product.images) ? product.images[0] : product.images || "https://via.placeholder.com/150"}
+                            alt={product.name}
+                            className="w-32 h-32 object-contain mb-4"
+                          />
+                          <h3 className="text-base font-medium mb-2 line-clamp-2 text-gray-800 no-underline">{product.name}</h3>
+                          <p className="text-lg font-bold mb-4 text-slate-700">₹{product.price}</p>
+                          <button className="w-full bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800 transition-colors">
+                            Rent Now
+                          </button>
+                        </Link>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(pagination.currentPage - 1)}
-                    disabled={pagination.currentPage === 1}
-                    className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  
-                  <span className="text-sm">
-                    Page {pagination.currentPage} of {pagination.totalPages}
-                  </span>
-                  
-                  <button
-                    onClick={() => handlePageChange(pagination.currentPage + 1)}
-                    disabled={pagination.currentPage === pagination.totalPages}
-                    className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
+                {/* Pagination Controls */}
+                <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Items per page:</span>
+                    <select
+                      value={pagination.productsPerPage}
+                      onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                      className="border rounded px-2 py-1 text-sm"
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                    </select>
+                  </div>
 
-                <div className="text-sm text-gray-600">
-                  Showing {products.length} of {pagination.totalProducts} products
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(pagination.currentPage - 1)}
+                      disabled={pagination.currentPage === 1}
+                      className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    
+                    <span className="text-sm">
+                      Page {pagination.currentPage} of {pagination.totalPages}
+                    </span>
+                    
+                    <button
+                      onClick={() => handlePageChange(pagination.currentPage + 1)}
+                      disabled={pagination.currentPage === pagination.totalPages}
+                      className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+
+                  <div className="text-sm text-gray-600">
+                    Showing {products.length} of {pagination.totalProducts} products
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </main>
+              </>
+            )}
+          </main>
+        </div>
       </div>
 
       <Footer />

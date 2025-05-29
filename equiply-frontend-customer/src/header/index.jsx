@@ -39,7 +39,7 @@ const Header = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (token) setIsLoggedIn(true);
+    setIsLoggedIn(!!token);
 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

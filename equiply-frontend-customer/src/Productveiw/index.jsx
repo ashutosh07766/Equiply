@@ -141,8 +141,10 @@ const ProductVeiw = () => {
         setWishlistCount(response.data.length);
       } catch (error) {
         console.error('Error checking wishlist status:', error.response?.data || error.message);
-        if (error.response?.status === 401) {
-          console.log('Token expired or invalid, redirecting to login');
+        // Don't automatically logout on wishlist check failures
+        // Only logout if explicitly told by server or on critical auth failures
+        if (error.response?.status === 401 && error.response?.data?.clearAuth === true) {
+          console.log('Server requested auth clearing');
           localStorage.removeItem('authToken');
           setIsLoggedIn(false);
           navigate('/login');
@@ -153,7 +155,7 @@ const ProductVeiw = () => {
     if (product?._id) {
       checkWishlistStatus();
     }
-  }, [product?._id]);
+  }, [product?._id, navigate]);
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
