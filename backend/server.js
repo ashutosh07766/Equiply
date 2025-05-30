@@ -20,10 +20,13 @@ const app = express();
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: ['http://localhost:5174', 'https://equiply-jrej.onrender.com','https://equiply-jrej.onrender.com','https://equiply-sage.vercel.app/'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'],
-  credentials: true
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://equiply-jrej.onrender.com', 'https://equiply-sage.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token', 'Origin', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(bodyParser.json());
