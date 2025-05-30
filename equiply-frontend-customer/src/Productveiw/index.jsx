@@ -130,6 +130,14 @@ const ProductVeiw = () => {
         if (data && data.success && data.product) {
           setProduct(data.product);
           
+          // Check if current user is the owner of this product
+          const userData = JSON.parse(localStorage.getItem('userData'));
+          if (userData && userData._id && data.product.seller === userData._id) {
+            setIsOwnProduct(true);
+          } else {
+            setIsOwnProduct(false);
+          }
+          
           // Set review statistics if available
           if (data.reviewStats) {
             setReviewStats(data.reviewStats);
@@ -569,7 +577,9 @@ const ProductVeiw = () => {
               <div className="mb-6">
                 <div className="flex items-center gap-4 mb-4">
                   <div>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} transition-colors duration-300`}>Price per day</p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} transition-colors duration-300`}>
+                      Price per {selectedRental.replace(/s$/, '')}
+                    </p>
                     <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-gray-900'} transition-colors duration-300`}>
                       ₹{product.renting?.[selectedRental] || product.price}
                     </p>
@@ -604,20 +614,28 @@ const ProductVeiw = () => {
               
               {/* Action Buttons */}
               <div className="flex gap-3">
-                <button
-                  onClick={handleRentNow}
-                  className={`flex-1 px-6 py-3 ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'} text-white rounded-lg font-medium transition-colors`}
-                >
-                  Rent Now
-                </button>
+                {isOwnProduct ? (
+                  <div className={`flex-1 px-6 py-3 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'} text-center rounded-lg`}>
+                    <span className={`${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                      You can't rent your own product
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleRentNow}
+                    className={`flex-1 px-6 py-3 ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'} text-white rounded-lg font-medium transition-colors`}
+                  >
+                    Rent Now
+                  </button>
+                )}
                 <button
                   onClick={toggleWishlist}
-                  disabled={!isLoggedIn}
+                  disabled={!isLoggedIn || isOwnProduct}
                   className={`px-6 py-3 border rounded-lg transition-all ${
                     isInWishlist 
                       ? `${isDarkMode ? 'bg-red-600 border-red-600 text-white hover:bg-red-700' : 'bg-red-600 border-red-600 text-white hover:bg-red-700'}`
                       : `${isDarkMode ? 'border-gray-600 text-gray-300 hover:border-red-500 hover:text-red-400' : 'border-gray-300 text-gray-700 hover:border-red-600 hover:text-red-600'}`
-                  }`}
+                  } ${(isOwnProduct || !isLoggedIn) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Heart size={20} fill={isInWishlist ? 'currentColor' : 'none'} />
                 </button>
